@@ -189,12 +189,17 @@ export function createWebrtcTransport() {
       code = _code;
       playerId = _playerId;
 
-      firestoreUnsubs.push(
-        subscribePlayers(code, (list) => {
+      // Aspetta il primo snapshot del roster prima di risolvere (stesso
+      // motivo di firestoreTransport: getPlayers() subito dopo connect()
+      // non deve restituire [] e far partire un round con playerOrder vuoto).
+      await new Promise((resolve) => {
+        const unsub = subscribePlayers(code, (list) => {
           roster = list;
           emitPlayersChanged();
-        })
-      );
+          resolve();
+        });
+        firestoreUnsubs.push(unsub);
+      });
 
       if (role === 'host') {
         const unsubList = onSnapshot(signalingCol(code), (snap) => {

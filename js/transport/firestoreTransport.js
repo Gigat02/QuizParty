@@ -24,11 +24,17 @@ export function createFirestoreTransport() {
       role = _role;
       code = _code;
       playerId = _playerId;
-      unsubs.push(
-        subscribePlayers(code, (list) => {
+      // Aspetta il primo snapshot prima di risolvere: senza questo,
+      // getPlayers() subito dopo connect() può restituire [] (la callback
+      // di subscribePlayers arriva in modo asincrono), e initRoundState()
+      // lato host finirebbe per creare un round con playerOrder vuoto.
+      await new Promise((resolve) => {
+        const unsub = subscribePlayers(code, (list) => {
           players = list;
-        })
-      );
+          resolve();
+        });
+        unsubs.push(unsub);
+      });
     },
 
     disconnect() {

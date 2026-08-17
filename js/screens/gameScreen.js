@@ -139,6 +139,14 @@ export function renderGameScreen(root) {
       );
 
       if (session.isHost) {
+        cleanupFns.push(
+          t.onAction((action, fromPlayerId) => {
+            const module = getGame(currentState.gameId);
+            currentState = module.reduce({ ...action, voterId: fromPlayerId }, currentState, players);
+            transport.broadcastState(currentState);
+          })
+        );
+
         const module = getGame('classifico');
         currentState = module.initRoundState(players, null);
         transport.broadcastState(currentState);

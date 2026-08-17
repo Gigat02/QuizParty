@@ -5,10 +5,10 @@
 // Sostituisci i valori sotto con quelli mostrati dalla Console Firebase
 // in Impostazioni progetto > Le tue app > Configurazione SDK.
 export const firebaseConfig = {
-  apiKey: 'REPLACE_ME',
-  authDomain: 'REPLACE_ME.firebaseapp.com',
-  projectId: 'REPLACE_ME',
-  storageBucket: 'REPLACE_ME.appspot.com',
-  messagingSenderId: 'REPLACE_ME',
-  appId: 'REPLACE_ME',
+  apiKey: 'AIzaSyDoc68vZkvc39zxkzfvtKG6vmOErc5cchQ',
+  authDomain: 'quizparty-feefe.firebaseapp.com',
+  projectId: 'quizparty-feefe',
+  storageBucket: 'quizparty-feefe.firebasestorage.app',
+  messagingSenderId: '307409089687',
+  appId: '1:307409089687:web:b74d7a0a7facc8373825d2',
 };

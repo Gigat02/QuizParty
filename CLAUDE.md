@@ -99,11 +99,24 @@ Il progetto Firebase (Spark, gratuito) va creato dalla console da chi possiede l
 
 ## Stato di avanzamento (17 agosto 2026)
 
-Tutto il codice è scritto, committato e pubblicato:
-- Repo: https://github.com/Gigat02/QuizParty (branch `main`)
-- Live su GitHub Pages: https://gigat02.github.io/QuizParty/
-- Testato in locale (server statico + browser): home, nickname, invito QR (libreria vendorizzata funzionante), navigazione mode-select, flusso di creazione lobby fino al punto di autenticazione Firebase (fallisce correttamente con errore gestito, perché la config è ancora un placeholder).
+Firebase configurato e funzionante (progetto `quizparty-feefe`), config reale in `js/config/firebase-config.js`, regole di sicurezza pubblicate sulla Console. **Full Online testato end-to-end con successo** (due origini browser separate, vedi sotto): lobby, join, sync live, round, classifica pesata con evidenziazione verde/rosso, punteggi cumulativi su più round, nuovo round, fine partita. Partial Offline (WebRTC) non ancora testato end-to-end.
 
-**Unico passaggio rimasto, bloccante e non automatizzabile da Claude**: creare il progetto Firebase gratuito (richiede login Google dell'utente) e incollare la config in `js/config/firebase-config.js` — vedi README.md "Setup (una tantum)". Dopo questo passaggio restano da fare: pubblicare `firestore.rules` sulla Console, e i test end-to-end reali (Full Online e Partial Offline a due tab) che finora non sono stati eseguibili perché l'autenticazione anonima falliva senza una config valida.
+Live su GitHub Pages: https://gigat02.github.io/QuizParty/ — repo: https://github.com/Gigat02/QuizParty (branch `main`).
+
+### Bug reali trovati e corretti durante il testing
+
+1. **Auth anonima condivisa tra tab** (`js/core/auth.js`): di default Firebase persiste l'utente anonimo per tutto il browser (indexedDB), quindi due tab dello stesso browser finivano per condividere lo stesso uid/giocatore, sovrascrivendosi a vicenda. Fix: `setPersistence(auth, browserSessionPersistence)` prima di `signInAnonymously`, coerente col fatto che la sessione di gioco (`core/state.js`) è già per-scheda (`sessionStorage`). Su dispositivi reali separati (i telefoni degli amici) questo non sarebbe comunque stato un problema, ma è comunque il comportamento corretto.
+2. **L'host non navigava mai a `#game`** (`js/screens/lobbyScreen.js`): il redirect automatico su cambio status della lobby era guardato da `!started`, ma l'host stesso settava `started = true` nel click handler prima ancora di scrivere su Firestore — quindi il proprio redirect non scattava mai (funzionava solo per gli ospiti). Fix: l'host naviga esplicitamente a `#game` subito dopo `setLobbyStatus(...)`.
+3. **Race condition su `connect()`** (`js/transport/firestoreTransport.js` e `webrtcTransport.js`): `connect()` si risolveva prima che arrivasse il primo snapshot Firestore della lista giocatori, quindi `getPlayers()` poteva restituire `[]` subito dopo — l'host inizializzava il primo round con `playerOrder` vuoto. Fix: `connect()` ora aspetta (`await new Promise(...)`) il primo snapshot prima di risolvere.
+4. **`gameScreen.js` non si iscriveva mai a `transport.onAction`**: l'host non riceveva mai le azioni (es. classifiche votate) inviate dagli ospiti. Fix: aggiunta la sottoscrizione `t.onAction(...)` nel ramo host, che applica `reduce()` e ribroadcasta lo stato.
+
+### Nota per il debugging futuro (ambiente di sviluppo, non bug dell'app)
+
+Il pacchetto `serve` (usato inizialmente come server statico locale) manda header di cache aggressivi: anche navigando di nuovo alla stessa pagina, il browser può continuare a eseguire moduli JS vecchi (cache-ata), rendendo invisibili le modifiche appena fatte e portando a diagnosi fuorvianti. **Usare `http-server -c-1`** (disabilita la cache) per qualunque sessione di debug locale — vedi `.claude/launch.json` nella cartella padre del repo (due config: `quizparty` porta 5173, `quizparty-player2` porta 5174, utile per simulare due giocatori con storage completamente isolato, dato che due tab dello stesso browser/porta condividono comunque `localStorage`/indexedDB). Inoltre, ri-navigare tramite tool a un URL identico a quello corrente (stesso hash incluso) può non ricaricare la pagina — per forzare un reload vero, navigare prima a un URL diverso (es. l'origine senza hash) e poi guidare l'app via click/JS in-page.
+
+### Prossimi passi
+
+- Testare Partial Offline end-to-end (due origini, verificare badge P2P nella lobby, poi mettere entrambe offline da DevTools a metà partita e verificare che il gioco continui via DataChannel).
+- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile, specialmente il comportamento drag-and-drop touch.
 
 Il piano di implementazione originale (con le assunzioni discusse e confermate con l'utente) è in `C:\Users\gigat\.claude\plans\sleepy-weaving-wilkinson.md`.

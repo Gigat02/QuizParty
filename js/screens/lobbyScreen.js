@@ -34,6 +34,10 @@ export function renderLobbyScreen(root) {
         startBtn.disabled = true;
         startBtn.textContent = 'Avvio...';
         await setLobbyStatus(session.lobbyCode, 'playing');
+        // L'host naviga subito: il redirect automatico su subscribeLobby
+        // qui sotto è guardato da `!started` (serve solo agli ospiti) e
+        // quindi non scatterebbe mai per l'host stesso.
+        navigate('#game');
       },
     },
     'Avvia partita'
