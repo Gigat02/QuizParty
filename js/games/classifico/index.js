@@ -3,7 +3,7 @@ import { ACTION_KIND } from '../../transport/transport.js';
 import { registerGame } from '../registry.js';
 import { pickAdjective, questionTextFor } from './adjectives.js';
 import { aggregateRanking, scoreRoundDeltas, allSubmitted } from './ranking.js';
-import { createRankList } from './dragReorder.js';
+import { createRankList } from './rankList.js';
 
 function playerInfo(players, playerId) {
   return players.find((p) => p.playerId === playerId) || { playerId, nickname: '???', color: '#ccc' };
@@ -108,7 +108,7 @@ function renderSubmitting(container, matchState, ctx) {
   container.appendChild(
     h('div', { class: 'stack' }, [
       questionCard,
-      h('p', { class: 'text-muted text-center' }, 'Trascina i giocatori per ordinarli dal più al meno.'),
+      h('p', { class: 'text-muted text-center' }, 'Usa le frecce per ordinare i giocatori dal più al meno.'),
       listWrap,
       confirmBtn,
     ])

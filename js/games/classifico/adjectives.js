@@ -34,7 +34,7 @@ export const ADJECTIVES = [
 ];
 
 export function questionTextFor(adjective) {
-  return `Chi è il più ${adjective}? Metti in ordine i giocatori dal più al meno ${adjective}.`;
+  return `Chi è il più ${adjective}?`;
 }
 
 /** Estrae un aggettivo non ancora usato in questa partita, se possibile. */

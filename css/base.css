@@ -14,9 +14,9 @@ body {
   min-height: 100%;
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(480px circle at 92% -6%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 60%),
-    radial-gradient(520px circle at -10% 18%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 60%),
-    radial-gradient(460px circle at 100% 78%, color-mix(in srgb, var(--color-secondary) 16%, transparent), transparent 60%);
+    radial-gradient(520px circle at 92% -8%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 65%),
+    radial-gradient(560px circle at -12% 22%, color-mix(in srgb, var(--color-primary) 26%, transparent), transparent 65%),
+    radial-gradient(480px circle at 105% 80%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 65%);
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: var(--color-text);

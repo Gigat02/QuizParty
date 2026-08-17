@@ -39,7 +39,7 @@ js/
   games/
     gameModule.js                  # interfaccia comune ai minigiochi
     registry.js                     # registerGame()/getGame()
-    classifico/{index,adjectives,ranking,dragReorder}.js
+    classifico/{index,adjectives,ranking,rankList}.js
   screens/{homeScreen,modeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
   ui/{qrInvite,scoreboardPanel,playerChip}.js
 assets/{icons/, logo.svg}
@@ -125,6 +125,16 @@ Due bug reali trovati durante la verifica visiva del redesign (nessuno dei due e
 
 6. **`core/dom.js` non applicava mai i colori dei pallini giocatore**: l'helper `h()` usava `Object.assign(el.style, {...})` per applicare gli stili inline, ma questo NON funziona per le CSS custom properties (es. `--dot-color`) — il browser lo ignora silenziosamente, quindi ogni pallino mostrava sempre il colore di fallback (uguale per tutti). Bug preesistente, mai notato prima perché i test precedenti verificavano solo i dati (Firestore) e il testo, non l'aspetto visivo. Fix: per le chiavi che iniziano con `--`, usare `el.style.setProperty(prop, val)` invece dell'assegnazione diretta.
 7. **Non è un bug dell'app, ma un'insidia per il debugging locale**: il service worker (per design) precarica `js/core/dom.js` e tutti i file dell'app shell. Se durante lo sviluppo locale hai già visitato l'app una volta in un tab/porta, il service worker continuerà a servire la versione vecchia dei file **anche dopo un reload con query string anti-cache sull'URL della pagina**, perché intercetta le singole richieste ai file per path indipendentemente dalla query string della pagina che le ha originate. Per testare modifiche JS/CSS in locale: apri la console e lancia `navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())); caches.keys().then(ks => ks.forEach(k => caches.delete(k)))`, poi ricarica.
+
+### Seconda passata di redesign: tema scuro (18 agosto 2026)
+
+Su richiesta dell'utente, palette sostituita di nuovo per allinearsi a un'altra sua app (github.com/Gigat02/Offline-game): sfondo viola molto scuro `#0c0b1c`, superfici `#16152c`/`#27263c`, viola chiaro `#a14fff` come colore primario (bottoni/azioni importanti), verde acido `#c4e621` come accento (bottoni secondari, numeri/testi rilevanti come il codice lobby e i punti round). Il token `--color-secondary` (viola) della passata precedente è stato rimosso: ora l'app usa solo 2 colori brand (primary viola + accent verde) invece di 3. Logo e icone rigenerati con inchiostro verde acido su sfondo trasparente (logo) o viola scuro arrotondato (icone), stesso script di prima (`sharp`) con colori parametrizzati.
+
+Altre due modifiche in questa passata:
+- **Riordino classifica**: rimosso il drag/swipe (`dragReorder.js` → cancellato), sostituito con due bottoni ▲/▼ per riga (`js/games/classifico/rankList.js`, stesso nome di funzione esportata `createRankList` per non toccare `classifico/index.js` più del necessario). Verificato che lo scambio e la disabilitazione ai bordi (primo/ultimo) funzionino.
+- **Testo domanda accorciato**: `questionTextFor()` in `adjectives.js` ora restituisce solo `Chi è il più {aggettivo}?`, senza più "Metti in ordine i giocatori dal più al meno...".
+
+Se in futuro si tocca ancora la palette, ricordarsi che `--color-secondary` non esiste più — i due colori disponibili sono `--color-primary` (viola, azioni importanti) e `--color-accent` (verde acido, secondarie/testi rilevanti).
 
 ### Prossimi passi
 

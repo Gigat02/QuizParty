@@ -79,7 +79,7 @@ export function renderLobbyScreen(root) {
       h('div', { class: 'lobby-code' }, session.lobbyCode),
       h(
         'p',
-        { class: `pill ${session.mode === 'offline' ? 'pill-secondary' : 'pill-accent'}` },
+        { class: `pill ${session.mode === 'offline' ? 'pill-primary' : 'pill-accent'}` },
         session.mode === 'offline' ? '🚌 Partial Offline' : '🌐 Full Online'
       ),
     ]),

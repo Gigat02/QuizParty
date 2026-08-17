@@ -11,7 +11,7 @@
 .home-hero .logo {
   width: 128px;
   height: 128px;
-  filter: drop-shadow(0 10px 18px rgba(255, 122, 69, 0.25));
+  filter: drop-shadow(0 10px 22px rgba(196, 230, 33, 0.35));
 }
 
 .home-hero h1 {
@@ -68,11 +68,11 @@
 }
 
 .mode-card-offline {
-  border-left-color: var(--color-secondary);
+  border-left-color: var(--color-primary);
 }
 
 .mode-card-offline .icon {
-  background: var(--color-secondary-soft);
+  background: var(--color-primary-soft);
 }
 
 .mode-note {
@@ -93,7 +93,7 @@
   font-size: 2.4rem;
   font-weight: 600;
   letter-spacing: 0.2em;
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 
 .lobby-players {
@@ -113,15 +113,15 @@
 /* ---------- Game screen ---------- */
 .question-card {
   text-align: center;
-  background: linear-gradient(155deg, var(--color-secondary), var(--color-secondary-dark));
-  color: var(--color-text-on-primary);
+  background: linear-gradient(155deg, var(--color-accent), var(--color-accent-dark));
+  color: var(--color-text-on-accent);
   border-radius: var(--radius-lg);
   padding: var(--space-6) var(--space-5);
   box-shadow: var(--shadow-md);
 }
 
 .question-card p:first-child {
-  opacity: 0.85;
+  opacity: 0.75;
 }
 
 .question-card .adjective {
@@ -157,12 +157,11 @@
 .results-columns .rank-item {
   padding: var(--space-2) var(--space-3);
   font-size: 0.9rem;
-  cursor: default;
 }
 
 .round-points {
   text-align: center;
   font-family: var(--font-heading);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-accent);
 }

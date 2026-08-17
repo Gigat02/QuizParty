@@ -25,13 +25,13 @@
 .btn-primary {
   background: linear-gradient(155deg, var(--color-primary), var(--color-primary-dark));
   color: var(--color-text-on-primary);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), 0 6px 20px rgba(161, 79, 255, 0.35);
 }
 
 .btn-accent {
-  background: linear-gradient(155deg, var(--color-secondary), var(--color-secondary-dark));
-  color: var(--color-text-on-primary);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(155deg, var(--color-accent), var(--color-accent-dark));
+  color: var(--color-text-on-accent);
+  box-shadow: var(--shadow-md), 0 6px 20px rgba(196, 230, 33, 0.3);
 }
 
 .btn-secondary {
@@ -177,7 +177,7 @@
 
 .player-chip .badge.pending {
   background: var(--color-warning-soft);
-  color: #9a6a10;
+  color: var(--color-warning);
 }
 
 .player-chip .badge.fail {
@@ -225,10 +225,10 @@
 .scoreboard-row .score {
   font-family: var(--font-heading);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 
-/* ---------- Ranking / drag reorder ---------- */
+/* ---------- Ranking ---------- */
 .rank-list {
   display: flex;
   flex-direction: column;
@@ -244,9 +244,6 @@
   border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 2px solid var(--color-border);
-  touch-action: none;
-  user-select: none;
-  cursor: grab;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
@@ -255,19 +252,6 @@
   font-weight: 600;
   color: var(--color-text-muted);
   width: 20px;
-}
-
-.rank-item .grip {
-  margin-left: auto;
-  color: var(--color-text-muted);
-  font-size: 1.2rem;
-}
-
-.rank-item.is-dragging {
-  cursor: grabbing;
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-primary);
-  z-index: 5;
 }
 
 .rank-item.result-correct {
@@ -280,11 +264,40 @@
   background: var(--color-danger-soft);
 }
 
+.rank-move-btns {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.rank-move-btn {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 1rem;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.rank-move-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.rank-move-btn:not(:disabled):active {
+  background: var(--color-primary-soft);
+}
+
 /* ---------- Modal / QR ---------- */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(38, 35, 46, 0.45);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,9 +342,9 @@
   color: var(--color-accent-dark);
 }
 
-.pill-secondary {
-  background: var(--color-secondary-soft);
-  color: var(--color-secondary-dark);
+.pill-primary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .text-muted {
