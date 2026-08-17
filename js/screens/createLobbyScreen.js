@@ -7,6 +7,7 @@ import { colorForIndex } from '../core/colors.js';
 
 export function renderCreateLobbyScreen(root, params) {
   const mode = params.get('mode') === 'offline' ? 'offline' : 'online';
+  const matchMode = params.get('matchMode') === 'custom' ? 'custom' : 'standard';
   const nickname = getNickname();
 
   if (!nickname) {
@@ -24,8 +25,8 @@ export function renderCreateLobbyScreen(root, params) {
     try {
       const playerId = await ensureAuth();
       const color = colorForIndex(0);
-      const code = await createLobby({ hostId: playerId, nickname, color, mode });
-      setSession({ lobbyCode: code, playerId, isHost: true, mode });
+      const code = await createLobby({ hostId: playerId, nickname, color, mode, matchMode });
+      setSession({ lobbyCode: code, playerId, isHost: true, mode, matchMode });
       navigate('#lobby');
     } catch (err) {
       console.error('Errore creazione lobby', err);

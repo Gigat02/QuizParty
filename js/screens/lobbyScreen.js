@@ -77,11 +77,18 @@ export function renderLobbyScreen(root) {
     h('div', { class: 'lobby-header' }, [
       h('p', { class: 'text-muted' }, 'Codice lobby'),
       h('div', { class: 'lobby-code' }, session.lobbyCode),
-      h(
-        'p',
-        { class: `pill ${session.mode === 'offline' ? 'pill-primary' : 'pill-accent'}` },
-        session.mode === 'offline' ? '🚌 Partial Offline' : '🌐 Full Online'
-      ),
+      h('div', { class: 'btn-row', style: { justifyContent: 'center' } }, [
+        h(
+          'p',
+          { class: `pill ${session.mode === 'offline' ? 'pill-primary' : 'pill-accent'}` },
+          session.mode === 'offline' ? '🚌 Partial Offline' : '🌐 Full Online'
+        ),
+        h(
+          'p',
+          { class: 'pill' },
+          session.matchMode === 'custom' ? '✍️ Personalizzata' : '🎲 Standard'
+        ),
+      ]),
     ]),
     h('div', { class: 'tabbar' }, [tabPlayersBtn, tabScoresBtn]),
     panels,

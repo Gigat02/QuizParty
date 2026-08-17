@@ -15,6 +15,9 @@
  * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => {ranking: string[], scoreDeltas: Record<string, number>}|null} computeResults
  *   Funzione pura, chiamabile da chiunque (host e ospiti calcolano lo stesso risultato indipendentemente).
  * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => boolean} isRoundComplete
+ * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => object} [advanceRound]
+ *   Opzionale. Passo intermedio più leggero di initRoundState — per minigiochi con più "sotto-round" dentro
+ *   uno stesso round (es. una coda di domande da scorrere). gameScreen.js lo chiama solo se il modulo lo definisce.
  */
 
 /**
@@ -24,6 +27,7 @@
  * @property {{playerId: string, nickname: string, color: string, isHost: boolean}} me
  * @property {import('../transport/transport.js').PlayerInfo[]} players
  * @property {() => void} requestNewRound - solo host, disponibile in UI di fine round
+ * @property {() => void} requestNextQuestion - solo host; no-op se il modulo non definisce advanceRound
  * @property {() => void} requestEndMatch - solo host
  */
 

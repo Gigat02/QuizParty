@@ -28,6 +28,7 @@
 
 export const ACTION_KIND = Object.freeze({
   SUBMIT_RANKING: 'submit_ranking',
+  SUBMIT_QUESTION: 'submit_question',
   START_ROUND: 'start_round',
   END_MATCH: 'end_match',
 });

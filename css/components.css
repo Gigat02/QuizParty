@@ -126,6 +126,13 @@
   border-color: var(--color-danger) !important;
 }
 
+.question-textarea {
+  min-height: 96px;
+  resize: vertical;
+  font-family: var(--font-family);
+  line-height: 1.4;
+}
+
 .input-code {
   text-align: center;
   letter-spacing: 0.4em;

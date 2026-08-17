@@ -4,7 +4,11 @@ Gioco multiplayer da party, 100% browser (no app, no build step), pubblicato gra
 
 ## Cos'è
 
-Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Primo (e per ora unico) minigioco: **Classifico** — viene estratta una domanda ("Chi è il più simpatico? Metti in ordine i giocatori dal più al meno simpatico"), ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata (media delle posizioni, stile Borda) e confronta con la classifica di ognuno (verde=corretto, rosso=diverso), assegnando +1 punto per posizione indovinata.
+Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Primo (e per ora unico) minigioco: **Classifico** — viene estratta una domanda ("Chi è il più simpatico?"), ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata (media delle posizioni, stile Borda) e confronta con la classifica di ognuno (verde=corretto, rosso=diverso), assegnando +1 punto per posizione indovinata.
+
+Chi crea la partita sceglie anche la **modalità di gioco** (dopo aver scelto Full Online/Partial Offline, prima di entrare in lobby — vedi `js/screens/matchModeSelectScreen.js`):
+- **Standard**: il sistema estrae automaticamente un aggettivo ad ogni round (comportamento originale).
+- **Personalizzata**: ad ogni turno tutti i giocatori scrivono prima una propria domanda (fase `writing`), poi il gioco le mostra e le fa classificare una alla volta in sequenza (stessa meccanica di voto/risultati di Standard, riusata identica). Non si può terminare la partita finché non sono state mostrate e classificate tutte le domande del turno — vedi dettaglio più sotto.
 
 ## Le due modalità (IMPORTANTE, decisione architetturale centrale)
 
@@ -40,9 +44,9 @@ js/
     gameModule.js                  # interfaccia comune ai minigiochi
     registry.js                     # registerGame()/getGame()
     classifico/{index,adjectives,ranking,rankList}.js
-  screens/{homeScreen,modeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
+  screens/{homeScreen,modeSelectScreen,matchModeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
   ui/{qrInvite,scoreboardPanel,playerChip}.js
-assets/{icons/, logo.svg}
+assets/{icons/, fonts/, logo.png}
 ```
 
 ## Interfaccia Transport (contratto)
@@ -67,6 +71,7 @@ render(container, matchState, ctx) -> void                   // identico per hos
 reduce(action, matchState, players) -> matchState             // host, puro
 computeResults(matchState, players) -> {ranking, scoreDeltas} // puro
 isRoundComplete(matchState, players) -> boolean
+advanceRound(matchState, players) -> matchState   // opzionale, host — passo intermedio più leggero di initRoundState
 ```
 
 `gameScreen.js` passa a `render()` una `ctx.submitAction()` che decide internamente se applicare localmente (host) o inviare via transport (ospite). Un nuovo minigioco si registra con `registerGame(id, module)` in `games/registry.js` e non richiede modifiche a `transport/` o `screens/gameScreen.js`, a patto che segua il modello "un'azione per giocatore per round, stato host-autoritativo" (non generalizza a giochi con azioni sequenziali/a turni — vedi limiti noti).
@@ -75,12 +80,15 @@ isRoundComplete(matchState, players) -> boolean
 
 ```
 lobbies/{code}                          # code = "123456"
-  code, mode: 'online'|'offline', hostId, status: 'lobby'|'playing'|'finished', currentGameId, createdAt
+  code, mode: 'online'|'offline', matchMode: 'standard'|'custom', hostId, status: 'lobby'|'playing'|'finished', currentGameId, createdAt
   players/{playerId}                    # playerId == auth.uid, NIENTE punteggio qui (vive in matchState)
     nickname, color, isHost, joinedAt, connected
-  rounds/current                        # scritto solo dall'host, È il matchState
-    gameId, phase, questionAdjective, questionText, playerOrder[], roundNumber, usedAdjectives[], scores{}, submissions{}
-    actions/{playerId}                  # input grezzo, scrivibile solo dal proprietario, leggibile da proprietario+host
+  rounds/current                        # scritto solo dall'host, È il matchState (forma dipende da matchMode)
+    # comuni: gameId, matchMode, phase, playerOrder[], scores{}, submissions{}
+    # matchMode 'standard': phase 'submitting'|'results', questionAdjective, questionText, roundNumber, usedAdjectives[]
+    # matchMode 'custom':   phase 'writing'|'submitting'|'results', turnNumber, customQuestions{playerId:testo},
+    #                       questionQueue[] (ordine autori, fissato quando tutti hanno scritto), queueIndex, questionText
+    actions/{playerId}                  # input grezzo (submit_ranking O submit_question), scrivibile solo dal proprietario, leggibile da proprietario+host
   signaling/{guestId}                   # solo modalità offline: offer/answer + callerCandidates/calleeCandidates
 ```
 
@@ -135,6 +143,20 @@ Altre due modifiche in questa passata:
 - **Testo domanda accorciato**: `questionTextFor()` in `adjectives.js` ora restituisce solo `Chi è il più {aggettivo}?`, senza più "Metti in ordine i giocatori dal più al meno...".
 
 Se in futuro si tocca ancora la palette, ricordarsi che `--color-secondary` non esiste più — i due colori disponibili sono `--color-primary` (viola, azioni importanti) e `--color-accent` (verde acido, secondarie/testi rilevanti).
+
+### Modalità "Personalizzata" (18 agosto 2026)
+
+Nuova scelta, solo per chi crea la partita, tra route `#mode` (online/offline) e `#create`: `#matchmode` (`js/screens/matchModeSelectScreen.js`) fa scegliere Standard (comportamento originale) o Personalizzata. Chi si unisce non sceglie nulla, eredita `matchMode` dal doc della lobby (stesso pattern già usato per `mode`).
+
+Design chiave: la modalità Personalizzata **riusa interamente** la macchina a stati esistente (`submissions`, `computeResults`, `scoreRoundDeltas`, la UI di voto/risultati) — l'unica cosa nuova è una fase `writing` prima e un meccanismo di coda per mostrare le domande scritte una alla volta:
+- `initRoundState(players, previousMatchState, config)` ora accetta un terzo parametro opzionale `config.matchMode`, letto solo alla primissima inizializzazione (i turni successivi ereditano `matchMode` da `previousMatchState`, esattamente come già succede per `scores`).
+- Fase `writing`: ogni giocatore scrive+conferma una domanda (azione `submit_question`, nuovo `ACTION_KIND`). Quando tutti hanno scritto, si fissa `questionQueue` (ordine = `playerOrder`) e si passa a `phase:'submitting'` con la prima domanda in coda — da qui in poi è identico a Standard.
+- Fine di una domanda in coda (`phase:'results'`): se non è l'ultima, l'host vede **solo** "Prossima domanda" (nessun bottone per terminare la partita — questo è il modo in cui si garantisce "non si può terminare finché tutte le domande non sono state classificate"); se è l'ultima, vede "Nuovo turno"/"Termina partita" come in Standard.
+- "Prossima domanda" usa un nuovo metodo opzionale del GameModule, `advanceRound(matchState)` — non fa parte del contratto minimo, `gameScreen.js` lo chiama solo `if (typeof module.advanceRound === 'function')`. Aggiunta una funzione gemella in `gameScreen.js`, `requestNextQuestion()`, sullo stesso pattern di `requestNewRound`/`requestEndMatch`.
+
+Testato con un test isolato (import diretto del modulo, senza Firestore) che simula scrittura → coda → voto → avanzamento → nuovo turno con punteggi mantenuti, poi end-to-end dal vivo a due giocatori (entrambi scrivono, votano 2 domande in sequenza, verificato che "Termina partita" non compaia prima dell'ultima, punteggi cumulativi corretti). Nessuna regressione sulla modalità Standard (verificata con lo stesso approccio).
+
+**Promemoria**: se si tocca ancora `firestore.rules`, la lista `hasOnly([...])` sulla `create` del doc lobby include ora anche `matchMode` — dimenticarla causa `permission-denied` silenzioso su ogni nuova creazione lobby (è già successo una volta in questa sessione).
 
 ### Prossimi passi
 

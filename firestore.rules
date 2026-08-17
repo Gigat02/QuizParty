@@ -26,7 +26,8 @@ service cloud.firestore {
         && request.resource.data.code == code
         && request.resource.data.status == 'lobby'
         && request.resource.data.mode in ['online', 'offline']
-        && request.resource.data.keys().hasOnly(['code', 'mode', 'hostId', 'status', 'currentGameId', 'createdAt']);
+        && request.resource.data.matchMode in ['standard', 'custom']
+        && request.resource.data.keys().hasOnly(['code', 'mode', 'matchMode', 'hostId', 'status', 'currentGameId', 'createdAt']);
 
       // Solo l'host può aggiornare la lobby, e solo i campi status/currentGameId
       // (code, hostId, createdAt restano immutabili dopo la creazione).

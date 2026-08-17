@@ -1,6 +1,7 @@
 import { initRouter, route } from './core/router.js';
 import { renderHomeScreen } from './screens/homeScreen.js';
 import { renderModeSelectScreen } from './screens/modeSelectScreen.js';
+import { renderMatchModeSelectScreen } from './screens/matchModeSelectScreen.js';
 import { renderCreateLobbyScreen } from './screens/createLobbyScreen.js';
 import { renderJoinLobbyScreen } from './screens/joinLobbyScreen.js';
 import { renderLobbyScreen } from './screens/lobbyScreen.js';
@@ -9,6 +10,7 @@ import './games/classifico/index.js'; // auto-registrazione nel registry minigio
 
 route('#home', renderHomeScreen);
 route('#mode', renderModeSelectScreen);
+route('#matchmode', renderMatchModeSelectScreen);
 route('#create', renderCreateLobbyScreen);
 route('#join', renderJoinLobbyScreen);
 route('#lobby', renderLobbyScreen);

@@ -5,19 +5,46 @@ import { pickAdjective, questionTextFor } from './adjectives.js';
 import { aggregateRanking, scoreRoundDeltas, allSubmitted } from './ranking.js';
 import { createRankList } from './rankList.js';
 
+const MAX_QUESTION_LENGTH = 140;
+
 function playerInfo(players, playerId) {
   return players.find((p) => p.playerId === playerId) || { playerId, nickname: '???', color: '#ccc' };
 }
 
-function initRoundState(players, previousMatchState) {
+/**
+ * @param {import('../../transport/transport.js').PlayerInfo[]} players
+ * @param {object|null} previousMatchState
+ * @param {{matchMode?: 'standard'|'custom'}} [config] usato solo alla primissima inizializzazione
+ *   (i turni/round successivi ereditano matchMode da previousMatchState)
+ */
+function initRoundState(players, previousMatchState, config = {}) {
   const playerOrder = players.map((p) => p.playerId);
-  const usedAdjectives = previousMatchState?.usedAdjectives || [];
-  const adjective = pickAdjective(usedAdjectives);
+  const matchMode = previousMatchState?.matchMode ?? config.matchMode ?? 'standard';
   const scores = { ...(previousMatchState?.scores || {}) };
   for (const id of playerOrder) if (!(id in scores)) scores[id] = 0;
 
+  if (matchMode === 'custom') {
+    return {
+      gameId: 'classifico',
+      matchMode,
+      phase: 'writing',
+      turnNumber: (previousMatchState?.turnNumber || 0) + 1,
+      playerOrder,
+      customQuestions: {},
+      questionQueue: [],
+      queueIndex: 0,
+      questionText: null,
+      submissions: {},
+      scores,
+    };
+  }
+
+  const usedAdjectives = previousMatchState?.usedAdjectives || [];
+  const adjective = pickAdjective(usedAdjectives);
+
   return {
     gameId: 'classifico',
+    matchMode,
     phase: 'submitting',
     roundNumber: (previousMatchState?.roundNumber || 0) + 1,
     usedAdjectives: [...usedAdjectives, adjective],
@@ -36,8 +63,34 @@ function computeResults(matchState) {
   return { ranking, scoreDeltas };
 }
 
-function reduce(action, matchState) {
-  if (action.type !== ACTION_KIND.SUBMIT_RANKING) return matchState;
+function reduceSubmitQuestion(action, matchState) {
+  if (matchState.matchMode !== 'custom' || matchState.phase !== 'writing') return matchState;
+  if (!action.voterId || typeof action.questionText !== 'string') return matchState;
+  const text = action.questionText.trim().slice(0, MAX_QUESTION_LENGTH);
+  if (!text) return matchState;
+
+  const customQuestions = { ...matchState.customQuestions, [action.voterId]: text };
+  const allWritten = matchState.playerOrder.every(
+    (id) => typeof customQuestions[id] === 'string' && customQuestions[id].length > 0
+  );
+
+  if (!allWritten) return { ...matchState, customQuestions };
+
+  // Tutti hanno scritto: si parte con la prima domanda della coda,
+  // riusando la stessa fase 'submitting'/'results' della modalità Standard.
+  const questionQueue = [...matchState.playerOrder];
+  return {
+    ...matchState,
+    customQuestions,
+    questionQueue,
+    queueIndex: 0,
+    phase: 'submitting',
+    questionText: customQuestions[questionQueue[0]],
+    submissions: {},
+  };
+}
+
+function reduceSubmitRanking(action, matchState) {
   if (matchState.phase !== 'submitting') return matchState;
   if (!action.voterId || !Array.isArray(action.ranking)) return matchState;
 
@@ -55,18 +108,118 @@ function reduce(action, matchState) {
   return next;
 }
 
+function reduce(action, matchState) {
+  if (action.type === ACTION_KIND.SUBMIT_QUESTION) return reduceSubmitQuestion(action, matchState);
+  if (action.type === ACTION_KIND.SUBMIT_RANKING) return reduceSubmitRanking(action, matchState);
+  return matchState;
+}
+
+/**
+ * Passo intermedio usato solo in modalità Personalizzata: passa alla
+ * prossima domanda già scritta dai giocatori senza aprire un nuovo turno
+ * di scrittura. Non fa parte del contratto GameModule "ufficiale" — è
+ * un'estensione opzionale che gameScreen.js chiama solo se presente.
+ */
+function advanceRound(matchState) {
+  if (matchState.matchMode !== 'custom' || matchState.phase !== 'results') return matchState;
+  const nextIndex = matchState.queueIndex + 1;
+  if (nextIndex >= matchState.questionQueue.length) return matchState;
+  const nextAuthor = matchState.questionQueue[nextIndex];
+  return {
+    ...matchState,
+    phase: 'submitting',
+    queueIndex: nextIndex,
+    questionText: matchState.customQuestions[nextAuthor],
+    submissions: {},
+  };
+}
+
 function isRoundComplete(matchState) {
   return matchState?.phase === 'results';
+}
+
+function renderWriting(container, matchState, ctx) {
+  const myQuestion = matchState.customQuestions[ctx.me.playerId];
+  const roundPlayers = matchState.playerOrder.map((id) => playerInfo(ctx.players, id));
+  const turnLabel = h('h3', { class: 'text-center' }, `Turno ${matchState.turnNumber}`);
+
+  if (myQuestion) {
+    const submittedIds = new Set(Object.keys(matchState.customQuestions));
+    const waitList = h(
+      'div',
+      { class: 'waiting-list' },
+      roundPlayers.map((p) =>
+        h('span', { class: 'player-chip' }, [
+          h('span', { class: 'player-dot', style: { '--dot-color': p.color } }),
+          h('span', { class: 'nickname' }, p.nickname),
+          h(
+            'span',
+            { class: `badge ${submittedIds.has(p.playerId) ? 'ok' : 'pending'}` },
+            submittedIds.has(p.playerId) ? 'Fatto' : 'In attesa'
+          ),
+        ])
+      )
+    );
+    container.appendChild(
+      h('div', { class: 'stack' }, [
+        turnLabel,
+        h('p', { class: 'text-center text-muted' }, 'Domanda inviata! In attesa degli altri giocatori...'),
+        waitList,
+      ])
+    );
+    return;
+  }
+
+  const textarea = h('textarea', {
+    class: 'input question-textarea',
+    placeholder: 'Scrivi una domanda tipo "Chi è il più...?"',
+    maxlength: String(MAX_QUESTION_LENGTH),
+  });
+
+  const errorEl = h('p', { class: 'text-center', style: { color: 'var(--color-danger)', minHeight: '1.2em' } });
+
+  const confirmBtn = h(
+    'button',
+    {
+      class: 'btn btn-primary',
+      onclick: () => {
+        const text = textarea.value.trim();
+        if (!text) {
+          errorEl.textContent = 'Scrivi una domanda prima di confermare.';
+          return;
+        }
+        ctx.submitAction({ type: ACTION_KIND.SUBMIT_QUESTION, questionText: text });
+      },
+    },
+    'Conferma domanda'
+  );
+
+  container.appendChild(
+    h('div', { class: 'stack' }, [
+      turnLabel,
+      h('p', { class: 'text-muted text-center' }, 'Scrivi una domanda per gli altri giocatori, poi confermala.'),
+      h('div', { class: 'field' }, [textarea]),
+      errorEl,
+      confirmBtn,
+    ])
+  );
 }
 
 function renderSubmitting(container, matchState, ctx) {
   const mySubmission = matchState.submissions[ctx.me.playerId];
   const roundPlayers = matchState.playerOrder.map((id) => playerInfo(ctx.players, id));
+  const isCustom = matchState.matchMode === 'custom';
 
-  const questionCard = h('div', { class: 'question-card' }, [
-    h('p', {}, `Round ${matchState.roundNumber}`),
-    h('p', { class: 'adjective' }, matchState.questionText),
-  ]);
+  const headerLabel = isCustom
+    ? `Turno ${matchState.turnNumber} · Domanda ${matchState.queueIndex + 1} di ${matchState.questionQueue.length}`
+    : `Round ${matchState.roundNumber}`;
+
+  const questionCardChildren = [h('p', {}, headerLabel), h('p', { class: 'adjective' }, matchState.questionText)];
+  if (isCustom) {
+    const author = playerInfo(ctx.players, matchState.questionQueue[matchState.queueIndex]);
+    questionCardChildren.push(h('p', {}, `— domanda di ${author.nickname}`));
+  }
+  const questionCard = h('div', { class: 'question-card' }, questionCardChildren);
 
   if (mySubmission) {
     const submittedIds = new Set(Object.keys(matchState.submissions));
@@ -120,6 +273,8 @@ function renderResults(container, matchState, ctx) {
   const finalRanking = result.ranking.map((id) => playerInfo(ctx.players, id));
   const myOrder = matchState.submissions[ctx.me.playerId] || [];
   const myPoints = result.scoreDeltas[ctx.me.playerId] || 0;
+  const isCustom = matchState.matchMode === 'custom';
+  const isLastQueuedQuestion = isCustom && matchState.queueIndex >= matchState.questionQueue.length - 1;
 
   const finalCol = h('div', {}, [
     h('h4', {}, 'Classifica finale'),
@@ -155,12 +310,20 @@ function renderResults(container, matchState, ctx) {
 
   const controls = [];
   if (ctx.me.isHost) {
-    controls.push(
-      h('div', { class: 'btn-row' }, [
-        h('button', { class: 'btn btn-secondary', onclick: () => ctx.requestEndMatch() }, 'Termina partita'),
-        h('button', { class: 'btn btn-primary', onclick: () => ctx.requestNewRound() }, 'Nuovo round'),
-      ])
-    );
+    if (isCustom && !isLastQueuedQuestion) {
+      controls.push(h('button', { class: 'btn btn-primary', onclick: () => ctx.requestNextQuestion() }, 'Prossima domanda'));
+    } else {
+      controls.push(
+        h('div', { class: 'btn-row' }, [
+          h('button', { class: 'btn btn-secondary', onclick: () => ctx.requestEndMatch() }, 'Termina partita'),
+          h(
+            'button',
+            { class: 'btn btn-primary', onclick: () => ctx.requestNewRound() },
+            isCustom ? 'Nuovo turno' : 'Nuovo round'
+          ),
+        ])
+      );
+    }
   } else {
     controls.push(h('p', { class: 'text-center text-muted' }, "In attesa che l'host continui..."));
   }
@@ -176,10 +339,13 @@ function renderResults(container, matchState, ctx) {
 
 function render(container, matchState, ctx) {
   clear(container);
-  if (!matchState || matchState.phase === 'submitting') {
-    renderSubmitting(container, matchState, ctx);
-  } else if (matchState.phase === 'results') {
+  const phase = matchState?.phase || 'submitting';
+  if (phase === 'writing') {
+    renderWriting(container, matchState, ctx);
+  } else if (phase === 'results') {
     renderResults(container, matchState, ctx);
+  } else {
+    renderSubmitting(container, matchState, ctx);
   }
 }
 
@@ -192,6 +358,7 @@ export const ClassificoModule = {
   reduce,
   computeResults,
   isRoundComplete,
+  advanceRound,
 };
 
 registerGame(ClassificoModule.id, ClassificoModule);

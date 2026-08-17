@@ -5,7 +5,13 @@ export function renderModeSelectScreen(root, params) {
   const intent = params.get('intent') === 'join' ? 'join' : 'create';
 
   function choose(mode) {
-    navigate(`#${intent}?mode=${mode}`);
+    // Solo chi crea la partita sceglie anche la modalità di gioco
+    // (Standard/Personalizzata) — chi si unisce eredita quella dell'host.
+    if (intent === 'create') {
+      navigate(`#matchmode?mode=${mode}`);
+    } else {
+      navigate(`#${intent}?mode=${mode}`);
+    }
   }
 
   const screen = h('div', { class: 'screen' }, [

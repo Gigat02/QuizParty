@@ -85,6 +85,18 @@ export function renderGameScreen(root) {
     transport.broadcastState(currentState);
   }
 
+  // Passo intermedio più leggero di "Nuovo round": usato dalla modalità
+  // Personalizzata per passare alla prossima domanda già scritta dai
+  // giocatori, senza aprire una nuova fase di scrittura. Non tutti i
+  // minigiochi devono implementarlo (vedi classifico/index.js).
+  function requestNextQuestion() {
+    if (!session.isHost) return;
+    const module = getGame(currentState.gameId);
+    if (typeof module.advanceRound !== 'function') return;
+    currentState = module.advanceRound(currentState, players);
+    transport.broadcastState(currentState);
+  }
+
   function requestEndMatch() {
     if (!session.isHost) return;
     currentState = { ...currentState, phase: 'ended' };
@@ -114,6 +126,7 @@ export function renderGameScreen(root) {
       me: meInfo(),
       players,
       requestNewRound,
+      requestNextQuestion,
       requestEndMatch,
     });
   }
@@ -148,7 +161,7 @@ export function renderGameScreen(root) {
         );
 
         const module = getGame('classifico');
-        currentState = module.initRoundState(players, null);
+        currentState = module.initRoundState(players, null, { matchMode: session.matchMode || 'standard' });
         transport.broadcastState(currentState);
       }
     }
