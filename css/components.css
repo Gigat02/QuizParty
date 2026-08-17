@@ -6,8 +6,9 @@
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 600;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   width: 100%;
 }
@@ -22,7 +23,13 @@
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: linear-gradient(155deg, var(--color-primary), var(--color-primary-dark));
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-accent {
+  background: linear-gradient(155deg, var(--color-secondary), var(--color-secondary-dark));
   color: var(--color-text-on-primary);
   box-shadow: var(--shadow-md);
 }
@@ -30,11 +37,13 @@
 .btn-secondary {
   background: var(--color-surface-alt);
   color: var(--color-text);
+  font-weight: 500;
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-primary);
+  color: var(--color-text-muted);
+  font-weight: 500;
   padding: var(--space-3) var(--space-4);
 }
 
@@ -92,7 +101,7 @@
 
 .field label {
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text-muted);
 }
 
@@ -100,6 +109,7 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 2px solid var(--color-border);
+  font-family: var(--font-family);
   font-size: 1.1rem;
   background: var(--color-surface-alt);
   color: var(--color-text);
@@ -119,8 +129,9 @@
 .input-code {
   text-align: center;
   letter-spacing: 0.4em;
+  font-family: var(--font-heading);
   font-size: 1.8rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 /* ---------- Chip giocatore ---------- */
@@ -134,15 +145,16 @@
 }
 
 .player-dot {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   flex-shrink: 0;
   background: var(--dot-color, var(--color-primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot-color, var(--color-primary)) 25%, transparent);
 }
 
 .player-chip .nickname {
-  font-weight: 700;
+  font-weight: 600;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -151,11 +163,11 @@
 
 .player-chip .badge {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 10px;
   border-radius: var(--radius-pill);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-dark);
 }
 
 .player-chip .badge.ok {
@@ -165,7 +177,7 @@
 
 .player-chip .badge.pending {
   background: var(--color-warning-soft);
-  color: var(--color-warning);
+  color: #9a6a10;
 }
 
 .player-chip .badge.fail {
@@ -186,7 +198,8 @@
   flex: 1;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-pill);
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-weight: 600;
   color: var(--color-text-muted);
 }
 
@@ -204,13 +217,14 @@
 
 .scoreboard-row .rank {
   width: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--color-text-muted);
   text-align: center;
 }
 
 .scoreboard-row .score {
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-weight: 600;
   color: var(--color-primary);
 }
 
@@ -237,7 +251,8 @@
 }
 
 .rank-item .rank-index {
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-weight: 600;
   color: var(--color-text-muted);
   width: 20px;
 }
@@ -269,7 +284,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(28, 29, 43, 0.45);
+  background: rgba(38, 35, 46, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -303,10 +318,20 @@
   display: inline-block;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-weight: 700;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-weight: 600;
   font-size: 0.85rem;
+}
+
+.pill-accent {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-dark);
+}
+
+.pill-secondary {
+  background: var(--color-secondary-soft);
+  color: var(--color-secondary-dark);
 }
 
 .text-muted {

@@ -1,12 +1,13 @@
+// Deve restare sincronizzato con le variabili --player-color-* in css/tokens.css
 export const PLAYER_COLORS = [
   '#ff6b6b',
   '#ffb648',
   '#ffd93d',
   '#6bcb77',
   '#35c2c1',
-  '#3b8bfd',
-  '#8c6bff',
-  '#ff6bd6',
+  '#7c5cfc',
+  '#ff8fd6',
+  '#4d8cff',
 ];
 
 /**

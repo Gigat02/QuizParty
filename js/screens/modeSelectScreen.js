@@ -16,20 +16,24 @@ export function renderModeSelectScreen(root, params) {
     h('div', { class: 'mode-grid' }, [
       h(
         'button',
-        { class: 'card card-tap mode-card', onclick: () => choose('online') },
+        { class: 'card card-tap mode-card mode-card-online', onclick: () => choose('online') },
         [
           h('div', { class: 'icon' }, '🌐'),
-          h('h3', {}, 'Full Online'),
-          h('p', {}, 'Tutti connessi a internet per tutta la partita. Il modo più semplice.'),
+          h('div', {}, [
+            h('h3', {}, 'Full Online'),
+            h('p', {}, 'Tutti connessi a internet per tutta la partita. Il modo più semplice.'),
+          ]),
         ]
       ),
       h(
         'button',
-        { class: 'card card-tap mode-card', onclick: () => choose('offline') },
+        { class: 'card card-tap mode-card mode-card-offline', onclick: () => choose('offline') },
         [
           h('div', { class: 'icon' }, '🚌'),
-          h('h3', {}, 'Partial Offline'),
-          h('p', {}, "Ci si connette una volta con internet, poi si può giocare senza (es. in viaggio)."),
+          h('div', {}, [
+            h('h3', {}, 'Partial Offline'),
+            h('p', {}, "Ci si connette una volta con internet, poi si può giocare senza (es. in viaggio)."),
+          ]),
         ]
       ),
     ]),

@@ -30,22 +30,14 @@ export function renderHomeScreen(root) {
 
   const screen = h('div', { class: 'screen' }, [
     h('div', { class: 'home-hero' }, [
-      h('div', {
-        class: 'logo',
-        html: `<svg viewBox="0 0 88 88" width="88" height="88" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="44" cy="44" r="42" fill="#3b5bfd"/>
-          <circle cx="30" cy="40" r="7" fill="#ffd93d"/>
-          <circle cx="58" cy="40" r="7" fill="#ff6bd6"/>
-          <path d="M26 58 Q44 74 62 58" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round"/>
-        </svg>`,
-      }),
+      h('img', { class: 'logo', src: 'assets/logo.png', alt: 'QuizParty' }),
       h('h1', {}, 'QuizParty'),
       h('p', {}, 'Il party game da giocare insieme, online o offline.'),
     ]),
     h('div', { class: 'stack' }, [
       h('div', { class: 'field' }, [h('label', {}, 'Nickname'), nicknameInput]),
       h('button', { class: 'btn btn-primary', onclick: () => goTo('create') }, 'Crea partita'),
-      h('button', { class: 'btn btn-secondary', onclick: () => goTo('join') }, 'Unisciti a una partita'),
+      h('button', { class: 'btn btn-accent', onclick: () => goTo('join') }, 'Unisciti a una partita'),
       h(
         'button',
         {
@@ -56,7 +48,7 @@ export function renderHomeScreen(root) {
             openInviteModal();
           },
         },
-        '📱 Invita amici'
+        '📱 Fai scaricare l\'app agli altri'
       ),
     ]),
   ]);

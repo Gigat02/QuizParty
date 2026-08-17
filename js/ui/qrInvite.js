@@ -13,7 +13,7 @@ export function openInviteModal() {
 
   const backdrop = h('div', { class: 'modal-backdrop' }, [
     h('div', { class: 'modal-card' }, [
-      h('h3', {}, 'Invita i tuoi amici'),
+      h('h3', {}, "Fai scaricare l'app agli altri"),
       h('p', { class: 'text-muted' }, 'Fai inquadrare questo codice, oppure condividi il link: si apre direttamente nel browser, nessuna app da installare.'),
       qrWrap,
       h('p', { class: 'pill' }, url),

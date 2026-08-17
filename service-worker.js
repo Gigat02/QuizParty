@@ -2,7 +2,7 @@
 // sito continua a funzionare offline (scenario "pullman senza internet").
 // Bump manuale di CACHE_NAME ad ogni deploy che cambia file cacheati,
 // altrimenti gli utenti restano bloccati su una versione vecchia.
-const CACHE_NAME = 'quizparty-v1';
+const CACHE_NAME = 'quizparty-v2';
 
 const PRECACHE_URLS = [
   './',
@@ -42,6 +42,9 @@ const PRECACHE_URLS = [
   './js/ui/playerChip.js',
   './js/ui/scoreboardPanel.js',
   './js/vendor/qrcode/qrcode.js',
+  './assets/fonts/fredoka.woff2',
+  './assets/fonts/nunito.woff2',
+  './assets/logo.png',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-512-maskable.png',

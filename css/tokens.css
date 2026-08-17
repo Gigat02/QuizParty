@@ -1,35 +1,62 @@
+@font-face {
+  font-family: 'Fredoka';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../assets/fonts/fredoka.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('../assets/fonts/nunito.woff2') format('woff2');
+}
+
 :root {
   /* superfici */
-  --color-bg: #ffffff;
+  --color-bg: #fffaf6;
   --color-surface: #ffffff;
-  --color-surface-alt: #f4f6fb;
-  --color-border: #e7e9f2;
+  --color-surface-alt: #f6f3fb;
+  --color-border: #ece6f5;
 
   /* testo */
-  --color-text: #1c1d2b;
-  --color-text-muted: #6b6f85;
+  --color-text: #26232e;
+  --color-text-muted: #756f82;
   --color-text-on-primary: #ffffff;
 
-  /* brand */
-  --color-primary: #3b5bfd;
-  --color-primary-dark: #2b46d9;
-  --color-primary-soft: #e7ebff;
+  /* brand: tangerine come colore principale (bottoni "forti"), viola come
+     secondo accento (es. "Unisciti a una partita", modalità offline),
+     verde acqua come terzo accento (es. modalità online) — coerenti ma
+     distinti, non un singolo blu ovunque */
+  --color-primary: #ff7a45;
+  --color-primary-dark: #e2602c;
+  --color-primary-soft: #ffe6d9;
+
+  --color-secondary: #7c5cfc;
+  --color-secondary-dark: #6142e0;
+  --color-secondary-soft: #ece5ff;
+
+  --color-accent: #17a398;
+  --color-accent-dark: #128077;
+  --color-accent-soft: #dcf5f2;
 
   /* accenti giocatori (assegnati a rotazione, vedi core/colors.js) */
   --player-color-1: #ff6b6b;
   --player-color-2: #ffb648;
   --player-color-3: #ffd93d;
-  --player-color-4: #6bcB77;
+  --player-color-4: #6bcb77;
   --player-color-5: #35c2c1;
-  --player-color-6: #3b8bfd;
-  --player-color-7: #8c6bff;
-  --player-color-8: #ff6bd6;
+  --player-color-6: #7c5cfc;
+  --player-color-7: #ff8fd6;
+  --player-color-8: #4d8cff;
 
   /* stato */
   --color-success: #2fb872;
   --color-success-soft: #e5f8ee;
-  --color-danger: #ff5f6d;
-  --color-danger-soft: #ffe9ea;
+  --color-danger: #ef4b5f;
+  --color-danger-soft: #fde9ec;
   --color-warning: #ffb648;
   --color-warning-soft: #fff4e2;
 
@@ -49,10 +76,12 @@
   --space-7: 48px;
 
   /* ombre */
-  --shadow-sm: 0 2px 8px rgba(28, 29, 43, 0.06);
-  --shadow-md: 0 8px 24px rgba(28, 29, 43, 0.10);
-  --shadow-lg: 0 16px 40px rgba(28, 29, 43, 0.14);
+  --shadow-sm: 0 2px 8px rgba(38, 35, 46, 0.06);
+  --shadow-md: 0 8px 24px rgba(38, 35, 46, 0.10);
+  --shadow-lg: 0 16px 40px rgba(38, 35, 46, 0.14);
 
-  /* tipografia */
-  --font-family: 'Nunito', 'Quicksand', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* tipografia: Fredoka (arrotondato, giocoso) per titoli/bottoni,
+     Nunito per il testo corrente — coppia pensata per stare insieme */
+  --font-heading: 'Fredoka', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }

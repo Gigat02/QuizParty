@@ -1,7 +1,7 @@
 /* ---------- Home ---------- */
 .home-hero {
   text-align: center;
-  padding-top: var(--space-6);
+  padding-top: var(--space-5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,14 +9,14 @@
 }
 
 .home-hero .logo {
-  width: 88px;
-  height: 88px;
+  width: 128px;
+  height: 128px;
+  filter: drop-shadow(0 10px 18px rgba(255, 122, 69, 0.25));
 }
 
 .home-hero h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--color-primary);
+  font-size: 2.1rem;
+  color: var(--color-text);
 }
 
 .home-hero p {
@@ -30,9 +30,17 @@
   gap: var(--space-4);
 }
 
+.mode-card {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  border-left: 6px solid transparent;
+}
+
 .mode-card h3 {
   font-size: 1.15rem;
   margin-bottom: var(--space-1);
+  color: var(--color-text);
 }
 
 .mode-card p {
@@ -41,7 +49,30 @@
 }
 
 .mode-card .icon {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.mode-card-online {
+  border-left-color: var(--color-accent);
+}
+
+.mode-card-online .icon {
+  background: var(--color-accent-soft);
+}
+
+.mode-card-offline {
+  border-left-color: var(--color-secondary);
+}
+
+.mode-card-offline .icon {
+  background: var(--color-secondary-soft);
 }
 
 .mode-note {
@@ -58,8 +89,9 @@
 }
 
 .lobby-code {
+  font-family: var(--font-heading);
   font-size: 2.4rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.2em;
   color: var(--color-primary);
 }
@@ -71,7 +103,7 @@
 }
 
 .section-title {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.95rem;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -81,16 +113,21 @@
 /* ---------- Game screen ---------- */
 .question-card {
   text-align: center;
-  background: var(--color-primary);
+  background: linear-gradient(155deg, var(--color-secondary), var(--color-secondary-dark));
   color: var(--color-text-on-primary);
   border-radius: var(--radius-lg);
   padding: var(--space-6) var(--space-5);
   box-shadow: var(--shadow-md);
 }
 
+.question-card p:first-child {
+  opacity: 0.85;
+}
+
 .question-card .adjective {
+  font-family: var(--font-heading);
   font-size: 1.6rem;
-  font-weight: 800;
+  font-weight: 600;
   margin-top: var(--space-2);
 }
 
@@ -108,7 +145,9 @@
 }
 
 .results-columns h4 {
+  font-family: var(--font-heading);
   font-size: 0.8rem;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin-bottom: var(--space-2);
@@ -123,6 +162,7 @@
 
 .round-points {
   text-align: center;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-weight: 600;
   color: var(--color-primary);
 }

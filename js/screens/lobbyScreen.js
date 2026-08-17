@@ -3,7 +3,6 @@ import { navigate } from '../core/router.js';
 import { getSession, clearSession } from '../core/state.js';
 import { subscribeLobby, setLobbyStatus } from '../transport/firestoreSignaling.js';
 import { getOrCreateTransport, resetTransport } from '../transport/activeTransport.js';
-import { openInviteModal } from '../ui/qrInvite.js';
 import { renderPlayerChip } from '../ui/playerChip.js';
 import { renderScoreboard } from '../ui/scoreboardPanel.js';
 
@@ -78,9 +77,12 @@ export function renderLobbyScreen(root) {
     h('div', { class: 'lobby-header' }, [
       h('p', { class: 'text-muted' }, 'Codice lobby'),
       h('div', { class: 'lobby-code' }, session.lobbyCode),
-      h('p', { class: 'pill' }, session.mode === 'offline' ? '🚌 Partial Offline' : '🌐 Full Online'),
+      h(
+        'p',
+        { class: `pill ${session.mode === 'offline' ? 'pill-secondary' : 'pill-accent'}` },
+        session.mode === 'offline' ? '🚌 Partial Offline' : '🌐 Full Online'
+      ),
     ]),
-    h('button', { class: 'btn btn-ghost', onclick: () => openInviteModal() }, '📱 Invita amici'),
     h('div', { class: 'tabbar' }, [tabPlayersBtn, tabScoresBtn]),
     panels,
     session.isHost ? startBtn : h('p', { class: 'text-muted text-center' }, "In attesa che l'host avvii la partita..."),

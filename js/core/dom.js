@@ -7,7 +7,13 @@ export function h(tag, attrs = {}, children = []) {
     else if (key.startsWith('on') && typeof value === 'function') {
       el.addEventListener(key.slice(2).toLowerCase(), value);
     } else if (key === 'style' && typeof value === 'object') {
-      Object.assign(el.style, value);
+      for (const [prop, val] of Object.entries(value)) {
+        // Object.assign(el.style, {...}) non funziona per le CSS custom
+        // properties (es. --dot-color): il browser lo ignora in silenzio,
+        // serve passare da setProperty.
+        if (prop.startsWith('--')) el.style.setProperty(prop, val);
+        else el.style[prop] = val;
+      }
     } else if (value === true) {
       el.setAttribute(key, '');
     } else {

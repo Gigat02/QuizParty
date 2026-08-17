@@ -1,0 +1,8 @@
+Fredoka (fredoka.woff2) and Nunito (nunito.woff2)
+Copyright Google Fonts contributors, licensed under the SIL Open Font License 1.1.
+https://scripts.sil.org/OFL
+
+Vendorizzati in questo repository (invece di caricarli da Google Fonts via
+CDN) per coerenza con la scelta di QuizParty di non dipendere da servizi
+esterni a runtime, e per poterli precaricare nel service worker così
+restano disponibili anche offline dopo la prima visita.

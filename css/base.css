@@ -11,9 +11,18 @@ body {
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  min-height: 100%;
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(480px circle at 92% -6%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 60%),
+    radial-gradient(520px circle at -10% 18%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 60%),
+    radial-gradient(460px circle at 100% 78%, color-mix(in srgb, var(--color-secondary) 16%, transparent), transparent 60%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-family);
+  font-weight: 400;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: contain;
 }
@@ -23,6 +32,13 @@ h2,
 h3,
 p {
   margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
 }
 
 button {
