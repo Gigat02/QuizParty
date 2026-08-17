@@ -26,7 +26,12 @@ service cloud.firestore {
         && request.resource.data.code == code
         && request.resource.data.status == 'lobby'
         && request.resource.data.mode in ['online', 'offline']
-        && request.resource.data.matchMode in ['standard', 'custom']
+        // matchMode è opzionale nella richiesta (client vecchi/con cache
+        // stale potrebbero non mandarlo): se presente deve essere valido,
+        // ma la sua assenza non deve bloccare la creazione della lobby con
+        // un permission-denied duro — il client lo interpreta comunque
+        // come 'standard' di default (vedi classifico/index.js).
+        && (!('matchMode' in request.resource.data) || request.resource.data.matchMode in ['standard', 'custom'])
         && request.resource.data.keys().hasOnly(['code', 'mode', 'matchMode', 'hostId', 'status', 'currentGameId', 'createdAt']);
 
       // Solo l'host può aggiornare la lobby, e solo i campi status/currentGameId
