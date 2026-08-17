@@ -97,6 +97,13 @@ lobbies/{code}                          # code = "123456"
 
 Il progetto Firebase (Spark, gratuito) va creato dalla console da chi possiede l'account Google — non automatizzabile da Claude. Config finale va incollata in `js/config/firebase-config.js`. Vedi `README.md` per i passaggi esatti.
 
-## Stato di avanzamento
+## Stato di avanzamento (17 agosto 2026)
 
-Vedi TodoList/Task tracker della sessione di sviluppo per lo stato aggiornato dei singoli step. Il piano di implementazione originale (con le assunzioni discusse e confermate con l'utente) è in `C:\Users\gigat\.claude\plans\sleepy-weaving-wilkinson.md`.
+Tutto il codice è scritto, committato e pubblicato:
+- Repo: https://github.com/Gigat02/QuizParty (branch `main`)
+- Live su GitHub Pages: https://gigat02.github.io/QuizParty/
+- Testato in locale (server statico + browser): home, nickname, invito QR (libreria vendorizzata funzionante), navigazione mode-select, flusso di creazione lobby fino al punto di autenticazione Firebase (fallisce correttamente con errore gestito, perché la config è ancora un placeholder).
+
+**Unico passaggio rimasto, bloccante e non automatizzabile da Claude**: creare il progetto Firebase gratuito (richiede login Google dell'utente) e incollare la config in `js/config/firebase-config.js` — vedi README.md "Setup (una tantum)". Dopo questo passaggio restano da fare: pubblicare `firestore.rules` sulla Console, e i test end-to-end reali (Full Online e Partial Offline a due tab) che finora non sono stati eseguibili perché l'autenticazione anonima falliva senza una config valida.
+
+Il piano di implementazione originale (con le assunzioni discusse e confermate con l'utente) è in `C:\Users\gigat\.claude\plans\sleepy-weaving-wilkinson.md`.
