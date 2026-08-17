@@ -99,7 +99,9 @@ Il progetto Firebase (Spark, gratuito) va creato dalla console da chi possiede l
 
 ## Stato di avanzamento (17 agosto 2026)
 
-Firebase configurato e funzionante (progetto `quizparty-feefe`), config reale in `js/config/firebase-config.js`, regole di sicurezza pubblicate sulla Console. **Full Online testato end-to-end con successo** (due origini browser separate, vedi sotto): lobby, join, sync live, round, classifica pesata con evidenziazione verde/rosso, punteggi cumulativi su più round, nuovo round, fine partita. Partial Offline (WebRTC) non ancora testato end-to-end.
+Firebase configurato e funzionante (progetto `quizparty-feefe`), config reale in `js/config/firebase-config.js`, regole di sicurezza pubblicate sulla Console. **Entrambe le modalità testate end-to-end con successo** (due origini browser separate, vedi sotto):
+- **Full Online**: lobby, join, sync live, round, classifica pesata con evidenziazione verde/rosso, punteggi cumulativi su più round, nuovo round, fine partita.
+- **Partial Offline**: aggancio P2P riuscito al lobby screen (badge "Connesso"), partita giocata interamente su WebRTC DataChannel. Testato anche il caso critico: con `fetch`/`XMLHttpRequest` bloccati su ENTRAMBE le schede (simulando zero internet), un intero round — nuovo round, voto, invio, calcolo risultati, punteggio — ha continuato a funzionare perfettamente, confermando che la promessa "gioca senza internet dopo l'aggancio" è reale.
 
 Live su GitHub Pages: https://gigat02.github.io/QuizParty/ — repo: https://github.com/Gigat02/QuizParty (branch `main`).
 
@@ -109,6 +111,7 @@ Live su GitHub Pages: https://gigat02.github.io/QuizParty/ — repo: https://git
 2. **L'host non navigava mai a `#game`** (`js/screens/lobbyScreen.js`): il redirect automatico su cambio status della lobby era guardato da `!started`, ma l'host stesso settava `started = true` nel click handler prima ancora di scrivere su Firestore — quindi il proprio redirect non scattava mai (funzionava solo per gli ospiti). Fix: l'host naviga esplicitamente a `#game` subito dopo `setLobbyStatus(...)`.
 3. **Race condition su `connect()`** (`js/transport/firestoreTransport.js` e `webrtcTransport.js`): `connect()` si risolveva prima che arrivasse il primo snapshot Firestore della lista giocatori, quindi `getPlayers()` poteva restituire `[]` subito dopo — l'host inizializzava il primo round con `playerOrder` vuoto. Fix: `connect()` ora aspetta (`await new Promise(...)`) il primo snapshot prima di risolvere.
 4. **`gameScreen.js` non si iscriveva mai a `transport.onAction`**: l'host non riceveva mai le azioni (es. classifiche votate) inviate dagli ospiti. Fix: aggiunta la sottoscrizione `t.onAction(...)` nel ramo host, che applica `reduce()` e ribroadcasta lo stato.
+5. **Messaggi DataChannel persi in caso di sottoscrizione tardiva** (`js/transport/webrtcTransport.js`): a differenza di Firestore (`onSnapshot` ridà sempre lo stato corrente ai nuovi listener), i messaggi su un WebRTC DataChannel sono effimeri — se l'host trasmetteva lo stato iniziale del round prima che l'ospite avesse registrato il proprio `onState` (probabile, perché l'ospite deve aspettare un giro Firestore per il redirect a `#game`, più lento del percorso locale dell'host), il messaggio andava perso per sempre e l'ospite restava con lo schermo di gioco vuoto. Fix: aggiunta una cache `lastState` (sia lato invio che ricezione) che viene ridata immediatamente a ogni nuovo handler registrato via `onState`, replicando il comportamento di `onSnapshot`.
 
 ### Nota per il debugging futuro (ambiente di sviluppo, non bug dell'app)
 
@@ -116,7 +119,7 @@ Il pacchetto `serve` (usato inizialmente come server statico locale) manda heade
 
 ### Prossimi passi
 
-- Testare Partial Offline end-to-end (due origini, verificare badge P2P nella lobby, poi mettere entrambe offline da DevTools a metà partita e verificare che il gioco continui via DataChannel).
-- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile, specialmente il comportamento drag-and-drop touch.
+- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile in produzione, specialmente: comportamento drag-and-drop touch, negoziazione WebRTC reale tra due dispositivi separati sulla stessa rete Wi-Fi (i test fatti finora sono su due origini `localhost` sulla stessa macchina — provano che il meccanismo funziona, non che regga su reti reali/NAT diversi).
+- Nessun altro bug noto al momento; l'app è considerata funzionalmente completa per l'MVP descritto nel piano.
 
 Il piano di implementazione originale (con le assunzioni discusse e confermate con l'utente) è in `C:\Users\gigat\.claude\plans\sleepy-weaving-wilkinson.md`.

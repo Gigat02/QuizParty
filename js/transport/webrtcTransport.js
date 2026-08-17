@@ -30,6 +30,14 @@ export function createWebrtcTransport() {
   let roster = [];
   const firestoreUnsubs = [];
   const stateHandlers = [];
+  // Ultimo matchState visto (inviato se host, ricevuto se ospite). A
+  // differenza di Firestore (onSnapshot ridà sempre lo stato corrente ai
+  // nuovi listener), i messaggi DataChannel sono effimeri: senza questa
+  // cache, un handler registrato dopo l'invio del primo broadcast (tipico
+  // se l'host arriva a #game più velocemente dell'ospite, che deve
+  // aspettare un giro Firestore per il redirect) perderebbe per sempre lo
+  // stato iniziale del round.
+  let lastState = null;
   const actionHandlers = [];
   const playersHandlers = [];
 
@@ -63,7 +71,10 @@ export function createWebrtcTransport() {
       } catch {
         return;
       }
-      if (msg.kind === 'state') stateHandlers.forEach((h) => h(msg.payload));
+      if (msg.kind === 'state') {
+        lastState = msg.payload;
+        stateHandlers.forEach((h) => h(msg.payload));
+      }
       else if (msg.kind === 'action') actionHandlers.forEach((h) => h(msg.payload, peerId));
     };
   }
@@ -228,6 +239,7 @@ export function createWebrtcTransport() {
 
     broadcastState(matchState) {
       if (role !== 'host') return;
+      lastState = matchState;
       const payload = JSON.stringify({ kind: 'state', payload: matchState });
       guestPeers.forEach((entry) => {
         if (entry.channel && entry.channel.readyState === 'open') entry.channel.send(payload);
@@ -244,6 +256,7 @@ export function createWebrtcTransport() {
 
     onState(handler) {
       stateHandlers.push(handler);
+      if (lastState) handler(lastState);
       return () => {
         const i = stateHandlers.indexOf(handler);
         if (i >= 0) stateHandlers.splice(i, 1);
