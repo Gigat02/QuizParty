@@ -118,7 +118,12 @@ export function renderGameScreen(root) {
       });
       return;
     }
-    clear(contentEl);
+    // Il modulo di gioco gestisce da sé la pulizia/ricostruzione di
+    // contentEl (vedi classifico/index.js): può scegliere di non toccare
+    // il DOM se per la vista del giocatore corrente non è cambiato nulla
+    // di rilevante. Ripulire qui incondizionatamente vanificherebbe
+    // quell'ottimizzazione e lascerebbe il contenitore vuoto quando il
+    // modulo decide di saltare il rebuild.
     const module = getGame(currentState.gameId);
     module.render(contentEl, currentState, {
       transport,

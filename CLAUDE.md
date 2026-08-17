@@ -144,6 +144,20 @@ Altre due modifiche in questa passata:
 
 Se in futuro si tocca ancora la palette, ricordarsi che `--color-secondary` non esiste più — i due colori disponibili sono `--color-primary` (viola, azioni importanti) e `--color-accent` (verde acido, secondarie/testi rilevanti).
 
+### Bug: il riordino/testo non confermato di un giocatore veniva azzerato dal voto di un altro (18 agosto 2026)
+
+Segnalato dall'utente dopo il rilascio di Personalizzata: quando un giocatore confermava la propria classifica, la lista degli ALTRI giocatori (ancora in fase di scelta) sembrava "riordinarsi secondo il voto di chi aveva confermato". Causa reale: ogni `submit_ranking`/`submit_question` fa ribroadcastare l'INTERO matchState a tutti (anche a chi non ha ancora confermato), e `classifico/index.js`'s `render()` ricostruiva sempre da zero la lista/textarea ad ogni matchState ricevuto — quindi il riordino locale non ancora confermato veniva perso e sostituito dall'ordine di default (`playerOrder`), che nei test a 2 giocatori può facilmente sembrare "l'ordine scelto dall'altro" per pura coincidenza (solo 2 permutazioni possibili).
+
+Fix in due parti:
+1. `classifico/index.js`: `render()` ora calcola una `editingKey` (fase + domanda/round + "sto ancora scrivendo/votando") e salta la ricostruzione se per la mia vista non è cambiato nulla di rilevante, preservando lo stato locale non confermato.
+2. **Bug nel primo tentativo del fix**: `gameScreen.js`'s `renderRound()` chiamava `clear(contentEl)` incondizionatamente PRIMA di `module.render(...)`, vanificando il punto 1 — quando `render()` decideva di saltare, il contenitore restava vuoto (era già stato ripulito da fuori), causando uno schermo di gioco completamente bianco al posto del riordino "congelato". Trovato con un MutationObserver + wrapper di `render()` per tracciare esattamente cosa succedeva al DOM tra una chiamata e l'altra (i controlli data/testo da soli non lo avrebbero mai rivelato). Fix: rimossa la `clear()` da `gameScreen.js` — ora ogni `GameModule.render()` è responsabile della propria pulizia/ricostruzione (vedi JSDoc aggiornato in `games/gameModule.js`).
+
+Verificato dal vivo a 3 giocatori: un giocatore riordina senza confermare, un altro conferma, il riordino del primo resta intatto e viene sottomesso correttamente quando poi conferma lui stesso.
+
+### Promemoria service worker
+
+**Bump `CACHE_NAME` in `service-worker.js` ad OGNI deploy che cambia file cacheati** — è stato dimenticato per due commit di fila (Personalizzata + relax regole matchMode), causando esattamente il tipo di "client con cache vecchia" che ha già creato confusione due volte in questa sessione (una volta con me durante il debugging, una volta con l'utente in produzione). Prima di ogni push, controllare che il numero di versione sia stato incrementato se sono cambiati file in `PRECACHE_URLS` o il loro contenuto.
+
 ### Modalità "Personalizzata" (18 agosto 2026)
 
 Nuova scelta, solo per chi crea la partita, tra route `#mode` (online/offline) e `#create`: `#matchmode` (`js/screens/matchModeSelectScreen.js`) fa scegliere Standard (comportamento originale) o Personalizzata. Chi si unisce non sceglie nulla, eredita `matchMode` dal doc della lobby (stesso pattern già usato per `mode`).

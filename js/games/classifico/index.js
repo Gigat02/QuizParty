@@ -338,8 +338,26 @@ function renderResults(container, matchState, ctx) {
 }
 
 function render(container, matchState, ctx) {
-  clear(container);
   const phase = matchState?.phase || 'submitting';
+
+  // Ogni submit_ranking/submit_question di UN giocatore fa ribroadcastare
+  // l'intero matchState a TUTTI, anche a chi non ha ancora confermato.
+  // Senza questo controllo, ogni broadcast intermedio ricostruiva da zero
+  // la lista/textarea di chi stava ancora decidendo, cancellando il
+  // riordino o il testo non ancora confermati. Se per la mia vista non è
+  // cambiato nulla di rilevante (stessa fase/domanda, io non ho ancora
+  // confermato), non tocco il DOM.
+  let editingKey = null;
+  if (phase === 'writing' && !matchState.customQuestions[ctx.me.playerId]) {
+    editingKey = `writing:${matchState.turnNumber}`;
+  } else if (phase === 'submitting' && !matchState.submissions[ctx.me.playerId]) {
+    editingKey = `submitting:${matchState.matchMode}:${matchState.questionText}:${matchState.queueIndex ?? ''}`;
+  }
+
+  if (editingKey && container.dataset.qpRenderKey === editingKey) return;
+  container.dataset.qpRenderKey = editingKey || '';
+
+  clear(container);
   if (phase === 'writing') {
     renderWriting(container, matchState, ctx);
   } else if (phase === 'results') {
