@@ -1,0 +1,328 @@
+/* ---------- Bottoni ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-pill);
+  font-size: 1.05rem;
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  width: 100%;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary);
+  padding: var(--space-3) var(--space-4);
+}
+
+.btn-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.9rem;
+  width: auto;
+}
+
+.btn-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* ---------- Card ---------- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-tap {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.card-tap:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-tap:active {
+  transform: scale(0.98);
+}
+
+.card-tap.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+/* ---------- Input ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.input {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  font-size: 1.1rem;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.input-error {
+  border-color: var(--color-danger) !important;
+}
+
+.input-code {
+  text-align: center;
+  letter-spacing: 0.4em;
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+/* ---------- Chip giocatore ---------- */
+.player-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+}
+
+.player-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--dot-color, var(--color-primary));
+}
+
+.player-chip .nickname {
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-chip .badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.player-chip .badge.ok {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.player-chip .badge.pending {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.player-chip .badge.fail {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+/* ---------- Tab / Punteggi ---------- */
+.tabbar {
+  display: flex;
+  gap: var(--space-2);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+
+.tabbar button {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.tabbar button.is-active {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.scoreboard-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.scoreboard-row .rank {
+  width: 22px;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.scoreboard-row .score {
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+/* ---------- Ranking / drag reorder ---------- */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  position: relative;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.rank-item .rank-index {
+  font-weight: 800;
+  color: var(--color-text-muted);
+  width: 20px;
+}
+
+.rank-item .grip {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+}
+
+.rank-item.is-dragging {
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+  z-index: 5;
+}
+
+.rank-item.result-correct {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.rank-item.result-wrong {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+/* ---------- Modal / QR ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 29, 43, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 20;
+}
+
+.modal-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.qr-wrap {
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Misc ---------- */
+.pill {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.grow {
+  flex: 1;
+}

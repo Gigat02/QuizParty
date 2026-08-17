@@ -1,0 +1,128 @@
+/* ---------- Home ---------- */
+.home-hero {
+  text-align: center;
+  padding-top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.home-hero .logo {
+  width: 88px;
+  height: 88px;
+}
+
+.home-hero h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.home-hero p {
+  color: var(--color-text-muted);
+}
+
+/* ---------- Mode select ---------- */
+.mode-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mode-card h3 {
+  font-size: 1.15rem;
+  margin-bottom: var(--space-1);
+}
+
+.mode-card p {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.mode-card .icon {
+  font-size: 1.8rem;
+}
+
+.mode-note {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+/* ---------- Lobby ---------- */
+.lobby-header {
+  text-align: center;
+}
+
+.lobby-code {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--color-primary);
+}
+
+.lobby-players {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.section-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Game screen ---------- */
+.question-card {
+  text-align: center;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+.question-card .adjective {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-top: var(--space-2);
+}
+
+.waiting-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.results-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.results-columns h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+  text-align: center;
+}
+
+.results-columns .rank-item {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.9rem;
+  cursor: default;
+}
+
+.round-points {
+  text-align: center;
+  font-weight: 800;
+  color: var(--color-primary);
+}

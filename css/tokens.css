@@ -1,0 +1,58 @@
+:root {
+  /* superfici */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f4f6fb;
+  --color-border: #e7e9f2;
+
+  /* testo */
+  --color-text: #1c1d2b;
+  --color-text-muted: #6b6f85;
+  --color-text-on-primary: #ffffff;
+
+  /* brand */
+  --color-primary: #3b5bfd;
+  --color-primary-dark: #2b46d9;
+  --color-primary-soft: #e7ebff;
+
+  /* accenti giocatori (assegnati a rotazione, vedi core/colors.js) */
+  --player-color-1: #ff6b6b;
+  --player-color-2: #ffb648;
+  --player-color-3: #ffd93d;
+  --player-color-4: #6bcB77;
+  --player-color-5: #35c2c1;
+  --player-color-6: #3b8bfd;
+  --player-color-7: #8c6bff;
+  --player-color-8: #ff6bd6;
+
+  /* stato */
+  --color-success: #2fb872;
+  --color-success-soft: #e5f8ee;
+  --color-danger: #ff5f6d;
+  --color-danger-soft: #ffe9ea;
+  --color-warning: #ffb648;
+  --color-warning-soft: #fff4e2;
+
+  /* forma */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  /* spazio */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ombre */
+  --shadow-sm: 0 2px 8px rgba(28, 29, 43, 0.06);
+  --shadow-md: 0 8px 24px rgba(28, 29, 43, 0.10);
+  --shadow-lg: 0 16px 40px rgba(28, 29, 43, 0.14);
+
+  /* tipografia */
+  --font-family: 'Nunito', 'Quicksand', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

@@ -1,0 +1,9 @@
+qrcode.js — QR Code Generator for JavaScript
+Copyright (c) 2009 Kazuhiko Arase
+Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Source: https://github.com/kazuhikoarase/qrcode-generator
+
+Vendorizzato in questo repository (con una riga aggiunta di export ES
+module in fondo al file) per permettere la generazione del QR code anche
+senza connessione internet, coerentemente con la modalità offline di
+QuizParty.
