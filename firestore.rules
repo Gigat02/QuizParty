@@ -32,7 +32,16 @@ service cloud.firestore {
         // un permission-denied duro — il client lo interpreta comunque
         // come 'standard' di default (vedi classifico/index.js).
         && (!('matchMode' in request.resource.data) || request.resource.data.matchMode in ['standard', 'custom'])
-        && request.resource.data.currentGameId in ['classifico', 'chilhascritto']
+        // currentGameId NON viene confrontato con l'elenco dei minigiochi
+        // esistenti: elencarli qui significherebbe dover ripubblicare le
+        // regole a mano dalla Console ad ogni nuovo gioco, e dimenticarsene
+        // produce un permission-denied silenzioso in produzione solo per
+        // quel gioco (è già successo con matchMode). Non è comunque un
+        // confine di sicurezza — un client ostile potrebbe scrivere uno
+        // qualsiasi dei valori ammessi — quindi basta controllarne la forma.
+        && request.resource.data.currentGameId is string
+        && request.resource.data.currentGameId.size() > 0
+        && request.resource.data.currentGameId.size() <= 40
         && request.resource.data.keys().hasOnly(['code', 'mode', 'matchMode', 'hostId', 'status', 'currentGameId', 'createdAt']);
 
       // Solo l'host può aggiornare la lobby, e solo i campi status/currentGameId

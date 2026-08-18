@@ -1,5 +1,6 @@
 // Funzioni pure condivise dalle due matchMode di "Chi l'ha scritto?": nessun
 // accesso a Firestore/WebRTC/DOM, chiamabili indipendentemente da ogni client.
+import { shuffle } from '../rotation.js';
 
 /**
  * Costruisce il pool di risposte da votare: le risposte scritte dai
@@ -22,15 +23,6 @@ export function buildAnswerPool(guesses, correctAnswer) {
   }));
   entries.push({ key: 'truth', text: correctAnswer, authorId: null });
   return shuffle(entries);
-}
-
-function shuffle(arr) {
-  const out = [...arr];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
 }
 
 /** @returns {boolean} true se ogni giocatore atteso ha scritto una risposta. */

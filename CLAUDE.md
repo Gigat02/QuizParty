@@ -4,7 +4,7 @@ Gioco multiplayer da party, 100% browser (no app, no build step), pubblicato gra
 
 ## Cos'è
 
-Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Due minigiochi finora: **Classifico** — viene estratta una domanda ("Chi è il più simpatico?"), ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata (media delle posizioni, stile Borda) e confronta con la classifica di ognuno (verde=corretto, rosso=diverso), assegnando +1 punto per posizione indovinata — e **"Chi l'ha scritto?"**, bluff/trivia in stile Fibbing It (dettagli sotto).
+Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Tre minigiochi finora (dettagli di ognuno più sotto): **Classifico** (viene estratta una domanda "Chi è il più simpatico?", ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata stile Borda e assegna +1 punto per posizione indovinata), **"Chi l'ha scritto?"** (bluff/trivia in stile Fibbing It) e **"Trova la parola"** (cooperativo, stile Just One).
 
 Chi crea la partita sceglie, in sequenza (dopo Full Online/Partial Offline, prima di entrare in lobby):
 1. **Tipo di gioco** (`js/screens/gameSelectScreen.js`, route `#gametype`): quale minigioco giocare. Schermata generica, costruita su `listGames()` dal registry — registrare un nuovo `GameModule` basta a farlo comparire qui, senza toccare questo file (a meno di volergli un'icona/tagline dedicata in `GAME_META`).
@@ -27,6 +27,28 @@ Bluff/trivia stile Fibbing It: si scrivono risposte plausibili per farsi votare 
 - **Personalizzata**: ad ogni turno un giocatore casuale (rotazione equa via `authorQueue`, un autore per ciclo completo — vedi `nextAuthor()` in `chilhascritto/index.js`) scrive domanda e risposta vera (fase `writing`, non gioca oltre in quel turno); gli altri scrivono una risposta (fase `guessing`) e poi votano (fase `voting`, autore escluso). Ogni voto ricevuto vale un punto per chi ha scritto quella risposta — **inclusa la risposta vera**: chi ha scritto la domanda guadagna un punto per ogni voto sulla verità, esattamente come un guesser per i voti sul suo bluff (simmetria voluta). Chi vota la risposta vera guadagna comunque un punto extra. Minimo **4 giocatori** (1 autore + almeno 3 guesser, altrimenti il voto è banale).
 
 Nota di sicurezza accettata: la risposta corretta vive nel `matchState` broadcast fin dall'inizio del round (server pure, nessun canale segreto separato — vedi il vincolo architetturale "host broadcasta l'intero stato" più sotto), anche se la UI non la mostra mai prima della fase `voting`. Un giocatore che ispezionasse devtools/Firestore potrebbe vederla in anticipo: stesso compromesso già accettato per il codice lobby a 6 cifre (vedi "Limiti noti dell'MVP").
+
+Nella fase di voto ogni giocatore vede **anche la propria risposta**, ma resa opaca (`.answer-option-mine`), non cliccabile ed etichettata "la tua": così il pool visualizzato è lo stesso per tutti (nessuna riga che "manca") senza permettere l'autovoto, che `reduce()` rifiuterebbe comunque.
+
+### Minigioco 3: "Trova la parola" (`js/games/trovalaparola/`)
+
+Cooperativo, ispirato a Just One: un giocatore non conosce la parola, gli altri gli danno **un indizio di una parola sola a testa**, ma gli indizi che si assomigliano troppo si annullano. Fasi: `writing` (solo Personalizzata) → `clues` → `guessing` → `results`.
+
+- **Standard**: la parola la estrae il sistema (banco in `trovalaparola/words.js`) e la vedono tutti tranne l'indovino.
+- **Personalizzata**: un giocatore a caso fra i non-indovini scrive lui la parola (fase `writing`) e poi **dà comunque il suo indizio come tutti** — è l'unica differenza fra le due modalità.
+- L'indovino ha **3 tentativi**: se non ci arriva, il round non fa punti per nessuno ("tutti perdono"). Se indovina, vincono tutti e i punti sono `4 − tentativi usati` (3 al primo colpo, 2 al secondo, 1 al terzo), uguali per tutti perché il gioco è cooperativo.
+- Minimo **3 giocatori** (1 indovino + 2 che danno indizi: sotto questa soglia il meccanismo dei doppioni non può nemmeno scattare).
+
+Regole di confronto fra parole (tutte in `trovalaparola/matching.js`, funzioni pure):
+- confronto **senza distinzione di maiuscole** e senza accenti (NFD + filtro `[^a-z0-9]`, quindi "perché" → "perche" senza tabelle di conversione);
+- **maschile/femminile equivalenti** — e di riflesso anche singolare/plurale, perché la regola è "via la vocale finale": `gatto`/`gatta`/`gatti`/`gatte` → radice `gatt`. Vale sia per l'eliminazione degli indizi sia per il tentativo dell'indovino;
+- indizi **uguali fra loro** (a livello di radice) si annullano a vicenda (`reason: 'duplicate'`);
+- indizio che **contiene la radice della parola segreta** eliminato (`reason: 'root'`), con controllo simmetrico così copre sia "gattino" per `gatto` sia "gatto" per `gattino`;
+- gli **spazi sono vietati**: l'input li elimina mentre si digita (anche se incollati) e `sanitizeWord()` li ributta via lato host, perché un client modificato non deve poter aggirare la UI.
+
+Attenzione a una conseguenza voluta della regola sulla vocale finale: parole diverse che differiscono solo per l'ultima vocale ("casa"/"caso") risultano uguali. È il prezzo di non avere un vero stemmer italiano, accettato consapevolmente per un party game. Sotto le 4 lettere la vocale non viene tolta, altrimenti resterebbero radici di 1-2 lettere che farebbero scattare eliminazioni a caso ("re" dentro "sereno") — per lo stesso motivo la ricerca di radice condivisa pretende almeno 3 caratteri.
+
+Visualizzazione degli indizi (requisito esplicito dell'utente): chi **non** deve indovinare vede tutti gli indizi con accanto **chi li ha scritti**, e quelli eliminati con una **✕ rossa** e la parola barrata; l'indovino vede gli stessi slot nello stesso ordine, ma delle parole eliminate legge solo `•••••` (sa quanti indizi ha perso, non quali erano). A fine round, in `results`, tutti vedono tutto in chiaro.
 
 ## Le due modalità (IMPORTANTE, decisione architetturale centrale)
 
@@ -61,8 +83,10 @@ js/
   games/
     gameModule.js                  # interfaccia comune ai minigiochi
     registry.js                     # registerGame()/getGame()/listGames()
+    rotation.js                     # shuffle() + nextInRotation(): ruolo a turno equo, condiviso fra minigiochi
     classifico/{index,adjectives,ranking,rankList}.js
     chilhascritto/{index,trivia,voting}.js
+    trovalaparola/{index,words,matching}.js
   screens/{homeScreen,modeSelectScreen,gameSelectScreen,matchModeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
   ui/{qrInvite,scoreboardPanel,playerChip}.js
 assets/{icons/, fonts/, logo.png}
@@ -112,8 +136,13 @@ lobbies/{code}                          # code = "123456"
     #                         correctAnswer (in matchState fin da subito, mai mostrata in UI prima di 'voting' — vedi nota sopra),
     #                         guesses{playerId:testo}, answerPool[{key,text,authorId|null}], votes{playerId:answerKey}
     # chilhascritto custom:   come standard + phase 'writing' iniziale, turnNumber, authorQueue[]/authorQueueIndex/authorId
+    # trovalaparola standard: phase 'clues'|'guessing'|'results', roundNumber, usedWords[], secretWord (nascosta in UI
+    #                         all'indovino fino a 'results'), guesserQueue[]/guesserQueueIndex/guesserId,
+    #                         clues{playerId:parola}, clueResults[{playerId,text,valid,reason}], attempts[], outcome 'won'|'lost'
+    # trovalaparola custom:   come standard + phase 'writing' iniziale, turnNumber, wordWriterId
     actions/{playerId}                  # input grezzo dell'ultima azione del giocatore (submit_ranking / submit_question /
-                                         # submit_question_answer / submit_guess / submit_vote a seconda del gioco/fase),
+                                         # submit_question_answer / submit_guess / submit_vote / submit_secret_word /
+                                         # submit_clue / submit_word_guess a seconda del gioco/fase),
                                          # scrivibile solo dal proprietario, leggibile da proprietario+host
   signaling/{guestId}                   # solo modalità offline: offer/answer + callerCandidates/calleeCandidates
 ```
@@ -196,7 +225,9 @@ Design chiave: la modalità Personalizzata **riusa interamente** la macchina a s
 
 Testato con un test isolato (import diretto del modulo, senza Firestore) che simula scrittura → coda → voto → avanzamento → nuovo turno con punteggi mantenuti, poi end-to-end dal vivo a due giocatori (entrambi scrivono, votano 2 domande in sequenza, verificato che "Termina partita" non compaia prima dell'ultima, punteggi cumulativi corretti). Nessuna regressione sulla modalità Standard (verificata con lo stesso approccio).
 
-**Promemoria**: se si tocca ancora `firestore.rules`, la lista `hasOnly([...])` sulla `create` del doc lobby include ora anche `matchMode` — dimenticarla causa `permission-denied` silenzioso su ogni nuova creazione lobby (è già successo una volta in questa sessione). Stessa attenzione per `currentGameId`: la rule di create ora valida anche `currentGameId in ['classifico', 'chilhascritto']` — **registrare un terzo minigioco richiede aggiungere il suo id anche qui**, altrimenti la creazione lobby fallisce silenziosamente solo per quel gioco.
+**Promemoria**: se si tocca ancora `firestore.rules`, la lista `hasOnly([...])` sulla `create` del doc lobby include ora anche `matchMode` — dimenticarla causa `permission-denied` silenzioso su ogni nuova creazione lobby (è già successo una volta in questa sessione). Per `currentGameId` invece la rule **non** elenca i minigiochi esistenti (controlla solo che sia una stringa non vuota): un enum lì costringerebbe a ripubblicare le regole a mano ad ogni gioco nuovo, e scordarsene darebbe un `permission-denied` silenzioso solo per quel gioco. Non è comunque un confine di sicurezza reale. Quindi **aggiungere un minigioco non richiede di toccare `firestore.rules`**.
+
+**Le `firestore.rules` non si deployano con GitHub Pages**: il push aggiorna solo il file nel repo, le regole vere vanno incollate/pubblicate a mano dalla Console Firebase (non c'è la firebase CLI installata su questa macchina). Se una modifica alle regole è necessaria per far funzionare una feature, va detto esplicitamente all'utente, altrimenti la feature sembrerà rotta in produzione.
 
 ### Secondo minigioco: "Chi l'ha scritto?" + selezione tipo di gioco (18 agosto 2026)
 
@@ -208,9 +239,26 @@ Meccanica del nuovo gioco (dettagliata sopra, sezione "Minigioco 2"): fasi `writ
 
 Testato dal vivo end-to-end con `http-server -c-1` (nuovo `.claude/launch.json` dentro il repo stesso, con 4 porte 5173-5176, perché il tool di preview del browser cerca la config nella working directory del progetto — quella preesistente nella cartella padre resta valida per l'uso da terminale manuale): Personalizzata a 4 giocatori (rotazione autore su 2 turni, punteggi verificati voto per voto, reveal con attribuzione autore/voti corretta) e Standard a 2 giocatori, incluso il caso limite di un guesser che scrive per coincidenza lo stesso testo della risposta vera (nessun crash, nessuna confusione tra le due entry nel pool). Verificata anche l'assenza di regressioni su Classifico con lo stesso setup. Nota collaterale (non un bug, comportamento già documentato): più tab sulla stessa porta condividono `localStorage` (quindi il nickname, se scritto in tab diversi troppo ravvicinati, può andare in race) ma non `sessionStorage`/l'utente anonimo — motivo per cui i giocatori nei test restavano comunque distinti nonostante il nickname duplicato visualizzato.
 
+### Terzo minigioco: "Trova la parola" (18 agosto 2026)
+
+Terzo `GameModule` (`js/games/trovalaparola/`), regole e vincoli descritti sopra nella sezione "Minigioco 3". Comparso automaticamente nella schermata `#gametype` senza modifiche a quel file (basta l'icona/tagline in `GAME_META`), confermando che il livello di selezione gioco introdotto col minigioco precedente regge.
+
+Cose decise in fase di implementazione, non dettate esplicitamente dall'utente (quindi rinegoziabili):
+- **Punteggio**: cooperativo e graduato, `4 − tentativi usati` a tutti in caso di vittoria, 0 a tutti in caso di sconfitta. L'utente aveva specificato solo "se non indovina tutti perdono": la graduazione serve a dare un senso ai 3 tentativi e a premiare gli indizi buoni.
+- **Chi indovina**: rotazione equa con `nextInRotation()`, un turno a testa per ciclo, come già l'autore in "Chi l'ha scritto?".
+- **Minimo 3 giocatori**, per lo stesso motivo per cui la Personalizzata di "Chi l'ha scritto?" ne chiede 4.
+
+Rifattorizzazione colta al volo: la rotazione equa del ruolo e lo `shuffle` erano stati scritti dentro `chilhascritto/`, e servivano identici qui — sono stati estratti in `js/games/rotation.js` e `chilhascritto/` è stato riportato a usarli, verificando col suo test isolato che non ci fossero regressioni.
+
+Nella stessa passata, su richiesta dell'utente, in "Chi l'ha scritto?" la fase di voto mostra ora anche la propria risposta (opaca, non cliccabile, etichettata "la tua") invece di ometterla del tutto.
+
+**Un problema di UI trovato durante il test dal vivo**: la schermata di risultato diceva "*{nickname} ci è arrivato in N tentativi*", cioè un participio maschile applicato a chiunque — il nickname non dice come si identifica chi gioca. Riformulato in modo neutro ("Indovinata da {nickname} in N tentativi"). Vale come promemoria per i testi futuri: **evitare participi/aggettivi con accordo di genere riferiti ai giocatori**.
+
+Testato con test isolato (import diretto del modulo, senza Firestore) su normalizzazione, radici, doppioni, entrambe le modalità, vittoria/sconfitta, rotazione; poi dal vivo a 4 giocatori su 4 porte diverse — servono origini separate, non solo tab diversi, altrimenti il `localStorage` condiviso dà a tutti lo stesso nickname e non si riesce a verificare l'attribuzione "di chi è l'indizio". Verificati dal vivo anche gli stili calcolati (✕ rossa, parola barrata, opacità) invece dei soli testi, dato che in questo progetto i controlli solo testuali hanno già lasciato passare due bug visivi.
+
 ### Prossimi passi
 
-- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile in produzione, specialmente: comportamento drag-and-drop touch, negoziazione WebRTC reale tra due dispositivi separati sulla stessa rete Wi-Fi (i test fatti finora sono su due origini `localhost` sulla stessa macchina — provano che il meccanismo funziona, non che regga su reti reali/NAT diversi). Vale anche per "Chi l'ha scritto?", testato finora solo in Full Online.
+- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile in produzione, specialmente: comportamento drag-and-drop touch, negoziazione WebRTC reale tra due dispositivi separati sulla stessa rete Wi-Fi (i test fatti finora sono su due origini `localhost` sulla stessa macchina — provano che il meccanismo funziona, non che regga su reti reali/NAT diversi). Vale anche per "Chi l'ha scritto?" e "Trova la parola", testati finora solo in Full Online.
 - Nessun altro bug noto al momento; l'app è considerata funzionalmente completa per l'MVP descritto nel piano.
 
 Il piano di implementazione originale (con le assunzioni discusse e confermate con l'utente) è in `C:\Users\gigat\.claude\plans\sleepy-weaving-wilkinson.md`.

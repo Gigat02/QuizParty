@@ -14,6 +14,10 @@ const MATCH_MODE_COPY = {
     standard: 'Il sistema propone una domanda con una risposta vera: scrivete una risposta credibile e votate quella che pensate sia giusta.',
     custom: 'Ad ogni turno un giocatore a caso scrive domanda e risposta vera, gli altri bluffano e votano. Serve un minimo di 4 giocatori.',
   },
+  trovalaparola: {
+    standard: 'Il sistema estrae la parola da far indovinare. Tutti gli altri danno un indizio di una parola sola.',
+    custom: 'Ad ogni turno un giocatore a caso scrive lui la parola da far indovinare (e dà comunque il suo indizio).',
+  },
 };
 
 export function renderMatchModeSelectScreen(root, params) {

@@ -300,6 +300,118 @@
   background: var(--color-primary-soft);
 }
 
+/* ---------- Chi l'ha scritto? ---------- */
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+/* La propria risposta: visibile ma spenta e non votabile. */
+.answer-option-mine {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.answer-option-tag {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+/* ---------- Trova la parola ---------- */
+.clue-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.clue-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+}
+
+.clue-item .clue-mark {
+  width: 18px;
+  flex-shrink: 0;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-danger);
+}
+
+.clue-item .clue-word {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.05rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clue-item .clue-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.clue-eliminated {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.clue-eliminated .clue-word {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Slot di un indizio eliminato visto dall'indovino: sa che c'era, non cosa diceva. */
+.clue-word-hidden {
+  letter-spacing: 0.15em;
+  text-decoration: none !important;
+  color: var(--color-text-muted);
+}
+
+.attempt-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.attempt-chip {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 2px 12px;
+  border-radius: var(--radius-pill);
+}
+
+.attempt-ko {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  text-decoration: line-through;
+}
+
+.attempt-ok {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
 /* ---------- Modal / QR ---------- */
 .modal-backdrop {
   position: fixed;

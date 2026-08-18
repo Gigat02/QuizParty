@@ -33,6 +33,10 @@ export const ACTION_KIND = Object.freeze({
   SUBMIT_QUESTION_ANSWER: 'submit_question_answer', // autore di un turno Personalizzata: { questionText, correctAnswer }
   SUBMIT_GUESS: 'submit_guess', // { guessText }
   SUBMIT_VOTE: 'submit_vote', // { answerKey }
+  // Usate dal minigioco "Trova la parola" (js/games/trovalaparola/):
+  SUBMIT_SECRET_WORD: 'submit_secret_word', // chi sceglie la parola in Personalizzata: { word }
+  SUBMIT_CLUE: 'submit_clue', // { clue } — una parola sola
+  SUBMIT_WORD_GUESS: 'submit_word_guess', // tentativo dell'indovino: { word }
   START_ROUND: 'start_round',
   END_MATCH: 'end_match',
 });

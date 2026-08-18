@@ -8,6 +8,7 @@ import { listGames } from '../games/registry.js';
 const GAME_META = {
   classifico: { icon: '📊', tagline: 'Estratta una domanda, ognuno ordina i giocatori: chi indovina di più la classifica del gruppo vince.' },
   chilhascritto: { icon: '🕵️', tagline: 'Scrivete risposte plausibili per farvi votare, o indovinate quella vera: bluff e trivia insieme.' },
+  trovalaparola: { icon: '🔍', tagline: 'Uno non conosce la parola, gli altri danno un indizio a testa — ma gli indizi uguali si annullano. Si vince insieme.' },
 };
 
 export function renderGameSelectScreen(root, params) {

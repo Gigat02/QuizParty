@@ -1,6 +1,7 @@
 import { h, clear } from '../../core/dom.js';
 import { ACTION_KIND } from '../../transport/transport.js';
 import { registerGame } from '../registry.js';
+import { nextInRotation } from '../rotation.js';
 import { pickTrivia } from './trivia.js';
 import { buildAnswerPool, allGuessed, allVoted, computeVoteResults } from './voting.js';
 
@@ -11,41 +12,6 @@ function playerInfo(players, playerId) {
   return players.find((p) => p.playerId === playerId) || { playerId, nickname: '???', color: '#ccc' };
 }
 
-function shufflePlayers(playerIds) {
-  const out = [...playerIds];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
-/**
- * Sceglie il prossimo autore del turno da una coda rimescolata: garantisce
- * che ogni giocatore faccia l'autore esattamente una volta per ciclo
- * completo (equità), pur restando "un giocatore casuale a turno" nell'ordine
- * effettivo. La coda si rimescola da capo alla primissima inizializzazione,
- * a fine ciclo, o se l'elenco giocatori è cambiato rispetto al turno precedente.
- */
-function nextAuthor(previousMatchState, playerOrder) {
-  const prevQueue = previousMatchState?.authorQueue;
-  const sameSet =
-    Array.isArray(prevQueue) &&
-    prevQueue.length === playerOrder.length &&
-    prevQueue.every((id) => playerOrder.includes(id));
-
-  let queue = prevQueue;
-  let index = previousMatchState?.authorQueueIndex ?? -1;
-
-  if (!sameSet || index + 1 >= queue.length) {
-    queue = shufflePlayers(playerOrder);
-    index = 0;
-  } else {
-    index += 1;
-  }
-  return { authorQueue: queue, authorQueueIndex: index, authorId: queue[index] };
-}
-
 /** @param {{matchMode?: 'standard'|'custom'}} [config] usato solo alla primissima inizializzazione */
 function initRoundState(players, previousMatchState, config = {}) {
   const playerOrder = players.map((p) => p.playerId);
@@ -54,7 +20,12 @@ function initRoundState(players, previousMatchState, config = {}) {
   for (const id of playerOrder) if (!(id in scores)) scores[id] = 0;
 
   if (matchMode === 'custom') {
-    const { authorQueue, authorQueueIndex, authorId } = nextAuthor(previousMatchState, playerOrder);
+    // Rotazione equa dell'autore: un turno a testa per ciclo (vedi rotation.js).
+    const { queue: authorQueue, index: authorQueueIndex, playerId: authorId } = nextInRotation(
+      previousMatchState?.authorQueue,
+      previousMatchState?.authorQueueIndex,
+      playerOrder
+    );
     return {
       gameId: 'chilhascritto',
       matchMode,
@@ -323,20 +294,29 @@ function renderVoting(container, matchState, ctx) {
     return;
   }
 
-  const options = matchState.answerPool.filter((entry) => entry.authorId !== ctx.me.playerId);
+  // La propria risposta resta in lista (così il pool che si vede è lo stesso
+  // di tutti e non "manca" una riga), ma spenta e non cliccabile: votarla
+  // sarebbe comunque rifiutato da reduce().
   const optionsList = h(
     'div',
     { class: 'stack' },
-    options.map((entry) =>
-      h(
+    matchState.answerPool.map((entry) => {
+      const isMine = entry.authorId === ctx.me.playerId;
+      if (isMine) {
+        return h('div', { class: 'card answer-option answer-option-mine' }, [
+          h('span', {}, entry.text),
+          h('span', { class: 'answer-option-tag' }, 'la tua'),
+        ]);
+      }
+      return h(
         'button',
         {
           class: 'card card-tap answer-option',
           onclick: () => ctx.submitAction({ type: ACTION_KIND.SUBMIT_VOTE, answerKey: entry.key }),
         },
         entry.text
-      )
-    )
+      );
+    })
   );
 
   container.appendChild(
