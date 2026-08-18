@@ -18,6 +18,10 @@ const MATCH_MODE_COPY = {
     standard: 'Il sistema estrae la parola da far indovinare. Tutti gli altri danno un indizio di una parola sola.',
     custom: 'Ad ogni turno un giocatore a caso scrive lui la parola da far indovinare (e dà comunque il suo indizio).',
   },
+  bugiaoverita: {
+    standard: 'Il sistema propone 3 affermazioni di cultura generale, due vere e una falsa: scoprite qual è la bugia.',
+    custom: 'Ogni turno scrivete 3 affermazioni su di voi (2 vere e 1 falsa), poi si passano in rassegna uno alla volta.',
+  },
 };
 
 export function renderMatchModeSelectScreen(root, params) {

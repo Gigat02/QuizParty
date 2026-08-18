@@ -37,6 +37,9 @@ export const ACTION_KIND = Object.freeze({
   SUBMIT_SECRET_WORD: 'submit_secret_word', // chi sceglie la parola in Personalizzata: { word }
   SUBMIT_CLUE: 'submit_clue', // { clue } — una parola sola
   SUBMIT_WORD_GUESS: 'submit_word_guess', // tentativo dell'indovino: { word }
+  // Usate dal minigioco "Bugia o Verità?" (js/games/bugiaoverita/):
+  SUBMIT_STATEMENTS: 'submit_statements', // { statements: [3 testi], lieIndex }
+  SUBMIT_JUDGEMENT: 'submit_judgement', // { lieIndex } — quale si pensa sia la bugia
   START_ROUND: 'start_round',
   END_MATCH: 'end_match',
 });

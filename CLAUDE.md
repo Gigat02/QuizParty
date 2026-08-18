@@ -4,7 +4,7 @@ Gioco multiplayer da party, 100% browser (no app, no build step), pubblicato gra
 
 ## Cos'è
 
-Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Tre minigiochi finora (dettagli di ognuno più sotto): **Classifico** (viene estratta una domanda "Chi è il più simpatico?", ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata stile Borda e assegna +1 punto per posizione indovinata), **"Chi l'ha scritto?"** (bluff/trivia in stile Fibbing It) e **"Trova la parola"** (cooperativo, stile Just One).
+Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Quattro minigiochi finora (dettagli di ognuno più sotto): **Classifico** (viene estratta una domanda "Chi è il più simpatico?", ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata stile Borda e assegna +1 punto per posizione indovinata), **"Chi l'ha scritto?"** (bluff/trivia in stile Fibbing It), **"Trova la parola"** (cooperativo, stile Just One) e **"Bugia o Verità?"** (due verità e una bugia).
 
 Chi crea la partita sceglie, in sequenza (dopo Full Online/Partial Offline, prima di entrare in lobby):
 1. **Tipo di gioco** (`js/screens/gameSelectScreen.js`, route `#gametype`): quale minigioco giocare. Schermata generica, costruita su `listGames()` dal registry — registrare un nuovo `GameModule` basta a farlo comparire qui, senza toccare questo file (a meno di volergli un'icona/tagline dedicata in `GAME_META`).
@@ -50,6 +50,18 @@ Attenzione a una conseguenza voluta della regola sulla vocale finale: parole div
 
 Visualizzazione degli indizi (requisito esplicito dell'utente): chi **non** deve indovinare vede tutti gli indizi con accanto **chi li ha scritti**, e quelli eliminati con una **✕ rossa** e la parola barrata; l'indovino vede gli stessi slot nello stesso ordine, ma delle parole eliminate legge solo `•••••` (sa quanti indizi ha perso, non quali erano). A fine round, in `results`, tutti vedono tutto in chiaro.
 
+### Minigioco 4: "Bugia o Verità?" (`js/games/bugiaoverita/`)
+
+Due verità e una bugia. Fasi: `writing` (solo Personalizzata) → `judging` → `results`.
+
+- **Standard**: il sistema propone **un set per round** di 3 affermazioni di cultura generale (banco in `bugiaoverita/statements.js`), lo giudicano **tutti** i giocatori. Non esistendo un autore, non c'è nessuno a cui dare il punto extra. Minimo 2 giocatori.
+- **Personalizzata**: nella fase `writing` **tutti** scrivono 3 affermazioni su di sé segnando quale è la bugia; poi si scorrono i set **uno per giocatore** con una coda (`queue`/`queueIndex` + `advanceRound`, identico alla coda di domande di Classifico Personalizzata), e l'autore di turno non giudica il proprio set. Minimo 3 giocatori.
+- **Punteggio**: 1 punto per ogni affermazione classificata correttamente — che nella pratica vale **3 se becchi la bugia, 1 se sbagli** (indicando una sola bugia, quando sbagli ne azzecchi comunque una). In Personalizzata l'autore prende **+1 punto extra se nessuno scopre la sua bugia**.
+
+**Vincolo di design importante — perché si indica UNA sola bugia invece di marcare liberamente le 3 frasi.** La proposta iniziale prevedeva 3 segni indipendenti (✕/✓ su ognuna). Con "2 vere e 1 falsa" noto a tutti, quella regola crea una **strategia dominante degenere**: marcare tutte e tre come vere garantisce 2 punti sicuri, mentre giocare davvero ne rende 1,67 di media (3 se indovini, 1 se no, con 1/3 di probabilità). Serviva indovinare la bugia più del 50% delle volte per giustificare il gioco onesto — quindi chi se ne accorgeva vinceva senza ragionare, e per giunta il punto extra all'autore sarebbe scattato sempre (nessuno accusa mai nulla). Risolto vincolando l'azione a un solo indice: `SUBMIT_JUDGEMENT` porta un `lieIndex`, quindi "sono tutte vere" **non è nemmeno rappresentabile**. La UI resta quella pensata dall'utente (✕ rossa sulla scelta, ✓ verdi sulle altre due, in anteprima prima di confermare).
+
+La selezione si conferma con un bottone dedicato ("Conferma scelta") invece di inviare al primo tocco: si può cambiare idea vedendo l'anteprima ✕/✓.
+
 ## Le due modalità (IMPORTANTE, decisione architetturale centrale)
 
 - **Full Online**: comunicazione continua via Firestore per tutta la partita.
@@ -87,6 +99,7 @@ js/
     classifico/{index,adjectives,ranking,rankList}.js
     chilhascritto/{index,trivia,voting}.js
     trovalaparola/{index,words,matching}.js
+    bugiaoverita/{index,statements}.js
   screens/{homeScreen,modeSelectScreen,gameSelectScreen,matchModeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
   ui/{qrInvite,scoreboardPanel,playerChip}.js
 assets/{icons/, fonts/, logo.png}
@@ -140,9 +153,14 @@ lobbies/{code}                          # code = "123456"
     #                         all'indovino fino a 'results'), guesserQueue[]/guesserQueueIndex/guesserId,
     #                         clues{playerId:parola}, clueResults[{playerId,text,valid,reason}], attempts[], outcome 'won'|'lost'
     # trovalaparola custom:   come standard + phase 'writing' iniziale, turnNumber, wordWriterId
+    # bugiaoverita standard:  phase 'judging'|'results', roundNumber, usedSets[], currentAuthorId null,
+    #                         currentStatements[3], currentLieIndex, judgements{playerId:indice scelto}
+    # bugiaoverita custom:    come standard + phase 'writing' iniziale, turnNumber, currentAuthorId,
+    #                         statementSets{playerId:{statements[3],lieIndex}}, queue[]/queueIndex
     actions/{playerId}                  # input grezzo dell'ultima azione del giocatore (submit_ranking / submit_question /
                                          # submit_question_answer / submit_guess / submit_vote / submit_secret_word /
-                                         # submit_clue / submit_word_guess a seconda del gioco/fase),
+                                         # submit_clue / submit_word_guess / submit_statements / submit_judgement
+                                         # a seconda del gioco/fase),
                                          # scrivibile solo dal proprietario, leggibile da proprietario+host
   signaling/{guestId}                   # solo modalità offline: offer/answer + callerCandidates/calleeCandidates
 ```
@@ -255,6 +273,18 @@ Nella stessa passata, su richiesta dell'utente, in "Chi l'ha scritto?" la fase d
 **Un problema di UI trovato durante il test dal vivo**: la schermata di risultato diceva "*{nickname} ci è arrivato in N tentativi*", cioè un participio maschile applicato a chiunque — il nickname non dice come si identifica chi gioca. Riformulato in modo neutro ("Indovinata da {nickname} in N tentativi"). Vale come promemoria per i testi futuri: **evitare participi/aggettivi con accordo di genere riferiti ai giocatori**.
 
 Testato con test isolato (import diretto del modulo, senza Firestore) su normalizzazione, radici, doppioni, entrambe le modalità, vittoria/sconfitta, rotazione; poi dal vivo a 4 giocatori su 4 porte diverse — servono origini separate, non solo tab diversi, altrimenti il `localStorage` condiviso dà a tutti lo stesso nickname e non si riesce a verificare l'attribuzione "di chi è l'indizio". Verificati dal vivo anche gli stili calcolati (✕ rossa, parola barrata, opacità) invece dei soli testi, dato che in questo progetto i controlli solo testuali hanno già lasciato passare due bug visivi.
+
+### Quarto minigioco: "Bugia o Verità?" (18 agosto 2026)
+
+Quarto `GameModule` (`js/games/bugiaoverita/`), regole nella sezione "Minigioco 4". Anche questo comparso da solo nella schermata `#gametype`, e senza toccare `firestore.rules` (grazie alla rimozione dell'enum `currentGameId` fatta col minigioco precedente): il livello di selezione gioco ha ormai retto tre aggiunte di fila.
+
+L'utente aveva chiesto esplicitamente di cercare falle logiche prima di implementare, e ne sono uscite due, entrambe corrette in fase di design (dettagli sopra): la **strategia dominante "marco tutto vero"** e il fatto che in Standard il **punto extra non avesse un destinatario**. Vale come promemoria di metodo: su un gioco a punti conviene sempre fare il conto del valore atteso delle strategie degeneri prima di scrivere il codice — qui la regola "1 punto per ogni assegnazione corretta" sembrava innocua e invece premiava chi non giocava.
+
+Su richiesta dell'utente la scelta si conferma con un bottone dedicato invece di inviare al primo tocco.
+
+**Trappola di debug scoperta qui (ambiente, non app)**: verificando gli stili calcolati, i pulsanti ✕/✓ risultavano tutti dello stesso colore anche con le classi giuste applicate e le regole CSS correttamente caricate. Non era un bug: `.statement-toggle` ha una `transition` e **il pannello browser non era visibile, quindi la pagina non compone frame e le transizioni CSS non avanzano mai** — `getComputedStyle` restituisce all'infinito il valore di partenza. Confermato azzerando la transizione (`el.style.transition = 'none'`), che fa scattare subito il colore giusto. Se in futuro un colore "non si applica" pur essendo tutto corretto, controllare questo prima di dare la caccia a un bug di CSS.
+
+Testato con test isolato (banco affermazioni ben formato, punteggi 3/1, bonus autore solo se non lo scopre nessuno, coda completa con azzeramento dei giudizi, rifiuto di indici non validi/autore che giudica sé stesso) e dal vivo a 4 giocatori su 4 porte: giro completo di 4 set, verificato che "Termina partita" non compaia prima dell'ultimo della coda, anteprima ✕/✓ e cambio idea prima della conferma, e Standard a 2 giocatori. Nessuna regressione sugli altri tre giochi.
 
 ### Prossimi passi
 

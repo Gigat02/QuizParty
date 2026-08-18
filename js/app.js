@@ -10,6 +10,7 @@ import { renderGameScreen } from './screens/gameScreen.js';
 import './games/classifico/index.js'; // auto-registrazione nel registry minigiochi
 import './games/chilhascritto/index.js'; // auto-registrazione nel registry minigiochi
 import './games/trovalaparola/index.js'; // auto-registrazione nel registry minigiochi
+import './games/bugiaoverita/index.js'; // auto-registrazione nel registry minigiochi
 
 route('#home', renderHomeScreen);
 route('#mode', renderModeSelectScreen);

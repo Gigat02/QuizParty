@@ -412,6 +412,102 @@
   color: var(--color-success);
 }
 
+/* ---------- Bugia o Verità? ---------- */
+.statement-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.statement-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.statement-item .statement-mark {
+  width: 24px;
+  flex-shrink: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.statement-item .statement-text {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.statement-item .statement-note {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Segnata come bugia (X rossa) / come vera (visto verde). */
+.statement-lie {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.statement-lie .statement-mark {
+  color: var(--color-danger);
+}
+
+.statement-true {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.statement-true .statement-mark {
+  color: var(--color-success);
+}
+
+.statement-choice {
+  cursor: pointer;
+  user-select: none;
+}
+
+.statement-choice:active {
+  transform: scale(0.99);
+}
+
+/* Riga di scrittura: campo di testo + pulsante "questa è la bugia". */
+.statement-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.statement-toggle {
+  flex-shrink: 0;
+  min-width: 84px;
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.statement-toggle.is-lie {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.statement-toggle.is-true {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
 /* ---------- Modal / QR ---------- */
 .modal-backdrop {
   position: fixed;
