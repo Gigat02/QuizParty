@@ -5,10 +5,11 @@ export function renderModeSelectScreen(root, params) {
   const intent = params.get('intent') === 'join' ? 'join' : 'create';
 
   function choose(mode) {
-    // Solo chi crea la partita sceglie anche la modalità di gioco
-    // (Standard/Personalizzata) — chi si unisce eredita quella dell'host.
+    // Solo chi crea la partita sceglie anche gioco e modalità
+    // (tipo di gioco poi Standard/Personalizzata) — chi si unisce eredita
+    // entrambi dall'host.
     if (intent === 'create') {
-      navigate(`#matchmode?mode=${mode}`);
+      navigate(`#gametype?mode=${mode}`);
     } else {
       navigate(`#${intent}?mode=${mode}`);
     }

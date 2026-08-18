@@ -15,12 +15,16 @@
  *   (utile per non perdere input locali non ancora confermati, es. un riordino in corso).
  * @property {(action: object, matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => object} reduce
  *   Solo host, funzione pura: applica un'azione allo stato corrente e restituisce il nuovo stato.
- * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => {ranking: string[], scoreDeltas: Record<string, number>}|null} computeResults
+ * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => object|null} computeResults
  *   Funzione pura, chiamabile da chiunque (host e ospiti calcolano lo stesso risultato indipendentemente).
+ *   La forma del valore restituito è specifica del modulo (es. classifico usa {ranking, scoreDeltas}) — non è
+ *   consumata genericamente da gameScreen.js, solo dal modulo stesso nel proprio render().
  * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => boolean} isRoundComplete
  * @property {(matchState: object, players: import('../transport/transport.js').PlayerInfo[]) => object} [advanceRound]
  *   Opzionale. Passo intermedio più leggero di initRoundState — per minigiochi con più "sotto-round" dentro
  *   uno stesso round (es. una coda di domande da scorrere). gameScreen.js lo chiama solo se il modulo lo definisce.
+ * @property {(matchMode: 'standard'|'custom') => number} [minPlayers]
+ *   Opzionale. Numero minimo di giocatori per iniziare con questa matchMode. Se assente, lobbyScreen.js usa 2.
  */
 
 /**

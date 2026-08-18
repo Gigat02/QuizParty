@@ -12,7 +12,7 @@ export function setNickname(nickname) {
 /**
  * Sessione di partita corrente (non sopravvive volutamente a un refresh
  * a metà partita, vedi limiti noti nel CLAUDE.md — MVP).
- * @typedef {{ lobbyCode: string, playerId: string, isHost: boolean, mode: 'online'|'offline' }} Session
+ * @typedef {{ lobbyCode: string, playerId: string, isHost: boolean, mode: 'online'|'offline', matchMode: 'standard'|'custom', gameId: string }} Session
  */
 
 /** @returns {Session|null} */

@@ -55,7 +55,7 @@ export function signalingRef(code, guestId) {
  * Crea una nuova lobby con un codice a 6 cifre libero.
  * @returns {Promise<string>} il codice generato
  */
-export async function createLobby({ hostId, nickname, color, mode, matchMode = 'standard' }) {
+export async function createLobby({ hostId, nickname, color, mode, matchMode = 'standard', gameId = 'classifico' }) {
   for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
     const code = generateLobbyCode();
     const ref = lobbyRef(code);
@@ -68,7 +68,7 @@ export async function createLobby({ hostId, nickname, color, mode, matchMode = '
       matchMode,
       hostId,
       status: 'lobby',
-      currentGameId: 'classifico',
+      currentGameId: gameId,
       createdAt: serverTimestamp(),
     });
     await setDoc(playerRef(code, hostId), {

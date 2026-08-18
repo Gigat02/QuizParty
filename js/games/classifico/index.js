@@ -377,6 +377,7 @@ export const ClassificoModule = {
   computeResults,
   isRoundComplete,
   advanceRound,
+  minPlayers: () => 2,
 };
 
 registerGame(ClassificoModule.id, ClassificoModule);

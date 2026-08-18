@@ -4,11 +4,29 @@ Gioco multiplayer da party, 100% browser (no app, no build step), pubblicato gra
 
 ## Cos'è
 
-Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Primo (e per ora unico) minigioco: **Classifico** — viene estratta una domanda ("Chi è il più simpatico?"), ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata (media delle posizioni, stile Borda) e confronta con la classifica di ognuno (verde=corretto, rosso=diverso), assegnando +1 punto per posizione indovinata.
+Party game tipo Jackbox: un host crea una lobby con codice a 6 cifre, gli amici entrano dal loro telefono (via link/QR), e giocano insieme minigiochi a round. Due minigiochi finora: **Classifico** — viene estratta una domanda ("Chi è il più simpatico?"), ogni giocatore ordina gli altri, il sistema calcola una classifica aggregata (media delle posizioni, stile Borda) e confronta con la classifica di ognuno (verde=corretto, rosso=diverso), assegnando +1 punto per posizione indovinata — e **"Chi l'ha scritto?"**, bluff/trivia in stile Fibbing It (dettagli sotto).
 
-Chi crea la partita sceglie anche la **modalità di gioco** (dopo aver scelto Full Online/Partial Offline, prima di entrare in lobby — vedi `js/screens/matchModeSelectScreen.js`):
+Chi crea la partita sceglie, in sequenza (dopo Full Online/Partial Offline, prima di entrare in lobby):
+1. **Tipo di gioco** (`js/screens/gameSelectScreen.js`, route `#gametype`): quale minigioco giocare. Schermata generica, costruita su `listGames()` dal registry — registrare un nuovo `GameModule` basta a farlo comparire qui, senza toccare questo file (a meno di volergli un'icona/tagline dedicata in `GAME_META`).
+2. **Modalità di gioco** (`js/screens/matchModeSelectScreen.js`, route `#matchmode`): Standard o Personalizzata, **per ogni gioco**:
+   - **Standard**: il sistema genera/estrae automaticamente le domande.
+   - **Personalizzata**: le domande le scrivono i giocatori stessi. Cosa significhi in pratica cambia da gioco a gioco (vedi sotto) — i testi descrittivi delle due card sono in `MATCH_MODE_COPY` dentro `matchModeSelectScreen.js`, non nel `GameModule`.
+
+Chi si unisce eredita entrambe le scelte dall'host (lette dal doc lobby, campi `currentGameId`/`matchMode`).
+
+### Minigioco 1: Classifico
+
 - **Standard**: il sistema estrae automaticamente un aggettivo ad ogni round (comportamento originale).
 - **Personalizzata**: ad ogni turno tutti i giocatori scrivono prima una propria domanda (fase `writing`), poi il gioco le mostra e le fa classificare una alla volta in sequenza (stessa meccanica di voto/risultati di Standard, riusata identica). Non si può terminare la partita finché non sono state mostrate e classificate tutte le domande del turno — vedi dettaglio più sotto.
+
+### Minigioco 2: "Chi l'ha scritto?" (`js/games/chilhascritto/`)
+
+Bluff/trivia stile Fibbing It: si scrivono risposte plausibili per farsi votare (un punto a voto ricevuto), e si guadagna un punto extra indovinando quella vera. Fasi: `writing` (solo Personalizzata) → `guessing` → `voting` → `results`.
+
+- **Standard**: il sistema propone una domanda con risposta vera nota (banco in `chilhascritto/trivia.js`) — **tutti** i giocatori scrivono una risposta (fase `guessing` diretta, nessun `writing`), poi tutti votano quale pensano sia quella vera (non la propria). Minimo 2 giocatori.
+- **Personalizzata**: ad ogni turno un giocatore casuale (rotazione equa via `authorQueue`, un autore per ciclo completo — vedi `nextAuthor()` in `chilhascritto/index.js`) scrive domanda e risposta vera (fase `writing`, non gioca oltre in quel turno); gli altri scrivono una risposta (fase `guessing`) e poi votano (fase `voting`, autore escluso). Ogni voto ricevuto vale un punto per chi ha scritto quella risposta — **inclusa la risposta vera**: chi ha scritto la domanda guadagna un punto per ogni voto sulla verità, esattamente come un guesser per i voti sul suo bluff (simmetria voluta). Chi vota la risposta vera guadagna comunque un punto extra. Minimo **4 giocatori** (1 autore + almeno 3 guesser, altrimenti il voto è banale).
+
+Nota di sicurezza accettata: la risposta corretta vive nel `matchState` broadcast fin dall'inizio del round (server pure, nessun canale segreto separato — vedi il vincolo architetturale "host broadcasta l'intero stato" più sotto), anche se la UI non la mostra mai prima della fase `voting`. Un giocatore che ispezionasse devtools/Firestore potrebbe vederla in anticipo: stesso compromesso già accettato per il codice lobby a 6 cifre (vedi "Limiti noti dell'MVP").
 
 ## Le due modalità (IMPORTANTE, decisione architetturale centrale)
 
@@ -42,9 +60,10 @@ js/
   transport/{transport,firestoreTransport,webrtcTransport,firestoreSignaling}.js
   games/
     gameModule.js                  # interfaccia comune ai minigiochi
-    registry.js                     # registerGame()/getGame()
+    registry.js                     # registerGame()/getGame()/listGames()
     classifico/{index,adjectives,ranking,rankList}.js
-  screens/{homeScreen,modeSelectScreen,matchModeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
+    chilhascritto/{index,trivia,voting}.js
+  screens/{homeScreen,modeSelectScreen,gameSelectScreen,matchModeSelectScreen,createLobbyScreen,joinLobbyScreen,lobbyScreen,gameScreen}.js
   ui/{qrInvite,scoreboardPanel,playerChip}.js
 assets/{icons/, fonts/, logo.png}
 ```
@@ -72,9 +91,10 @@ reduce(action, matchState, players) -> matchState             // host, puro
 computeResults(matchState, players) -> {ranking, scoreDeltas} // puro
 isRoundComplete(matchState, players) -> boolean
 advanceRound(matchState, players) -> matchState   // opzionale, host — passo intermedio più leggero di initRoundState
+minPlayers(matchMode) -> number                    // opzionale — se assente, lobbyScreen.js usa 2 di default
 ```
 
-`gameScreen.js` passa a `render()` una `ctx.submitAction()` che decide internamente se applicare localmente (host) o inviare via transport (ospite). Un nuovo minigioco si registra con `registerGame(id, module)` in `games/registry.js` e non richiede modifiche a `transport/` o `screens/gameScreen.js`, a patto che segua il modello "un'azione per giocatore per round, stato host-autoritativo" (non generalizza a giochi con azioni sequenziali/a turni — vedi limiti noti).
+`gameScreen.js` passa a `render()` una `ctx.submitAction()` che decide internamente se applicare localmente (host) o inviare via transport (ospite). Un nuovo minigioco si registra con `registerGame(id, module)` in `games/registry.js` e non richiede modifiche a `screens/gameScreen.js` né alle implementazioni di `Transport` (`firestoreTransport.js`/`webrtcTransport.js`, che trattano l'azione come oggetto opaco), a patto che segua il modello "un'azione per giocatore per round, stato host-autoritativo" (non generalizza a giochi con azioni sequenziali/a turni — vedi limiti noti). In pratica di solito aggiunge però le proprie costanti di tipo-azione all'`ACTION_KIND` condiviso in `transport/transport.js` (solo per convenzione/DX, non obbligatorio: sono stringhe opache, un modulo potrebbe definirle anche localmente) — vedi `chilhascritto/index.js` come secondo esempio dopo `classifico/index.js`.
 
 ## Schema dati Firestore
 
@@ -83,12 +103,18 @@ lobbies/{code}                          # code = "123456"
   code, mode: 'online'|'offline', matchMode: 'standard'|'custom', hostId, status: 'lobby'|'playing'|'finished', currentGameId, createdAt
   players/{playerId}                    # playerId == auth.uid, NIENTE punteggio qui (vive in matchState)
     nickname, color, isHost, joinedAt, connected
-  rounds/current                        # scritto solo dall'host, È il matchState (forma dipende da matchMode)
-    # comuni: gameId, matchMode, phase, playerOrder[], scores{}, submissions{}
-    # matchMode 'standard': phase 'submitting'|'results', questionAdjective, questionText, roundNumber, usedAdjectives[]
-    # matchMode 'custom':   phase 'writing'|'submitting'|'results', turnNumber, customQuestions{playerId:testo},
-    #                       questionQueue[] (ordine autori, fissato quando tutti hanno scritto), queueIndex, questionText
-    actions/{playerId}                  # input grezzo (submit_ranking O submit_question), scrivibile solo dal proprietario, leggibile da proprietario+host
+  rounds/current                        # scritto solo dall'host, È il matchState (forma dipende da gameId e matchMode)
+    # comuni a entrambi i giochi: gameId, matchMode, phase, playerOrder[], scores{}
+    # classifico standard: phase 'submitting'|'results', questionAdjective, questionText, roundNumber, usedAdjectives[], submissions{}
+    # classifico custom:   phase 'writing'|'submitting'|'results', turnNumber, customQuestions{playerId:testo},
+    #                       questionQueue[] (ordine autori, fissato quando tutti hanno scritto), queueIndex, questionText, submissions{}
+    # chilhascritto standard: phase 'guessing'|'voting'|'results', roundNumber, usedQuestions[], questionText,
+    #                         correctAnswer (in matchState fin da subito, mai mostrata in UI prima di 'voting' — vedi nota sopra),
+    #                         guesses{playerId:testo}, answerPool[{key,text,authorId|null}], votes{playerId:answerKey}
+    # chilhascritto custom:   come standard + phase 'writing' iniziale, turnNumber, authorQueue[]/authorQueueIndex/authorId
+    actions/{playerId}                  # input grezzo dell'ultima azione del giocatore (submit_ranking / submit_question /
+                                         # submit_question_answer / submit_guess / submit_vote a seconda del gioco/fase),
+                                         # scrivibile solo dal proprietario, leggibile da proprietario+host
   signaling/{guestId}                   # solo modalità offline: offer/answer + callerCandidates/calleeCandidates
 ```
 
@@ -170,11 +196,21 @@ Design chiave: la modalità Personalizzata **riusa interamente** la macchina a s
 
 Testato con un test isolato (import diretto del modulo, senza Firestore) che simula scrittura → coda → voto → avanzamento → nuovo turno con punteggi mantenuti, poi end-to-end dal vivo a due giocatori (entrambi scrivono, votano 2 domande in sequenza, verificato che "Termina partita" non compaia prima dell'ultima, punteggi cumulativi corretti). Nessuna regressione sulla modalità Standard (verificata con lo stesso approccio).
 
-**Promemoria**: se si tocca ancora `firestore.rules`, la lista `hasOnly([...])` sulla `create` del doc lobby include ora anche `matchMode` — dimenticarla causa `permission-denied` silenzioso su ogni nuova creazione lobby (è già successo una volta in questa sessione).
+**Promemoria**: se si tocca ancora `firestore.rules`, la lista `hasOnly([...])` sulla `create` del doc lobby include ora anche `matchMode` — dimenticarla causa `permission-denied` silenzioso su ogni nuova creazione lobby (è già successo una volta in questa sessione). Stessa attenzione per `currentGameId`: la rule di create ora valida anche `currentGameId in ['classifico', 'chilhascritto']` — **registrare un terzo minigioco richiede aggiungere il suo id anche qui**, altrimenti la creazione lobby fallisce silenziosamente solo per quel gioco.
+
+### Secondo minigioco: "Chi l'ha scritto?" + selezione tipo di gioco (18 agosto 2026)
+
+Su richiesta dell'utente, implementato un secondo `GameModule` (`js/games/chilhascritto/`) e, prerequisito architetturale, un vero livello di scelta del tipo di gioco prima di Standard/Personalizzata — prima il `gameId` era hardcoded a `'classifico'` in 3 punti (`firestoreSignaling.js`, `classifico/index.js`, `gameScreen.js`) nonostante l'architettura fosse già pensata per supportare più giochi. Nuovo albero di route: `#mode` → `#gametype` (nuovo, generico via `listGames()`) → `#matchmode` (ora generico, con copy per-gioco in `MATCH_MODE_COPY`) → `#create`. `gameId` ora viaggia in `Session` (`core/state.js`) esattamente come `matchMode`, letto/scritto in `lobbies/{code}.currentGameId`.
+
+Meccanica del nuovo gioco (dettagliata sopra, sezione "Minigioco 2"): fasi `writing`(solo custom)/`guessing`/`voting`/`results`, rotazione equa dell'autore in Personalizzata (`nextAuthor()`), pool di risposte anonime costruito una volta dall'host e broadcast (`buildAnswerPool` in `chilhascritto/voting.js`). Aggiunto anche un contratto opzionale al `GameModule`, `minPlayers(matchMode)`, consultato da `lobbyScreen.js` invece del minimo 2 hardcoded — necessario perché la Personalizzata di questo gioco richiede almeno 4 giocatori (1 autore + 3 guesser) per non essere banale.
+
+**Bug reale trovato dal test isolato prima di qualunque test dal vivo**: la prima versione di `computeVoteResults` (in `chilhascritto/voting.js`) assegnava il punto "voto ricevuto" solo leggendo `entry.authorId`, che per la risposta vera è sempre `null` (non ha un guesser-autore) — risultato, in Personalizzata l'autore del turno non riceveva mai i punti per i voti sulla risposta vera, nonostante fosse una scelta di design esplicitamente confermata con l'utente. Il test isolato (stesso approccio già usato per Classifico Personalizzata: import diretto del modulo, nessun Firestore, simulazione completa di un turno con `assert`) lo ha preso subito confrontando i punteggi attesi con quelli calcolati. Fix: `computeVoteResults` ora controlla esplicitamente `matchState.authorId` per il ramo "risposta vera".
+
+Testato dal vivo end-to-end con `http-server -c-1` (nuovo `.claude/launch.json` dentro il repo stesso, con 4 porte 5173-5176, perché il tool di preview del browser cerca la config nella working directory del progetto — quella preesistente nella cartella padre resta valida per l'uso da terminale manuale): Personalizzata a 4 giocatori (rotazione autore su 2 turni, punteggi verificati voto per voto, reveal con attribuzione autore/voti corretta) e Standard a 2 giocatori, incluso il caso limite di un guesser che scrive per coincidenza lo stesso testo della risposta vera (nessun crash, nessuna confusione tra le due entry nel pool). Verificata anche l'assenza di regressioni su Classifico con lo stesso setup. Nota collaterale (non un bug, comportamento già documentato): più tab sulla stessa porta condividono `localStorage` (quindi il nickname, se scritto in tab diversi troppo ravvicinati, può andare in race) ma non `sessionStorage`/l'utente anonimo — motivo per cui i giocatori nei test restavano comunque distinti nonostante il nickname duplicato visualizzato.
 
 ### Prossimi passi
 
-- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile in produzione, specialmente: comportamento drag-and-drop touch, negoziazione WebRTC reale tra due dispositivi separati sulla stessa rete Wi-Fi (i test fatti finora sono su due origini `localhost` sulla stessa macchina — provano che il meccanismo funziona, non che regga su reti reali/NAT diversi).
+- Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile in produzione, specialmente: comportamento drag-and-drop touch, negoziazione WebRTC reale tra due dispositivi separati sulla stessa rete Wi-Fi (i test fatti finora sono su due origini `localhost` sulla stessa macchina — provano che il meccanismo funziona, non che regga su reti reali/NAT diversi). Vale anche per "Chi l'ha scritto?", testato finora solo in Full Online.
 - Nessun altro bug noto al momento; l'app è considerata funzionalmente completa per l'MVP descritto nel piano.
 
 Il piano di implementazione originale (con le assunzioni discusse e confermate con l'utente) è in `C:\Users\gigat\.claude\plans\sleepy-weaving-wilkinson.md`.

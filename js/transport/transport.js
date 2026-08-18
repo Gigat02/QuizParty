@@ -29,6 +29,10 @@
 export const ACTION_KIND = Object.freeze({
   SUBMIT_RANKING: 'submit_ranking',
   SUBMIT_QUESTION: 'submit_question',
+  // Usate dal minigioco "Chi l'ha scritto?" (js/games/chilhascritto/):
+  SUBMIT_QUESTION_ANSWER: 'submit_question_answer', // autore di un turno Personalizzata: { questionText, correctAnswer }
+  SUBMIT_GUESS: 'submit_guess', // { guessText }
+  SUBMIT_VOTE: 'submit_vote', // { answerKey }
   START_ROUND: 'start_round',
   END_MATCH: 'end_match',
 });

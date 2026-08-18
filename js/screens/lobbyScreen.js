@@ -5,6 +5,7 @@ import { subscribeLobby, setLobbyStatus } from '../transport/firestoreSignaling.
 import { getOrCreateTransport, resetTransport } from '../transport/activeTransport.js';
 import { renderPlayerChip } from '../ui/playerChip.js';
 import { renderScoreboard } from '../ui/scoreboardPanel.js';
+import { getGame } from '../games/registry.js';
 
 export function renderLobbyScreen(root) {
   const session = getSession();
@@ -12,6 +13,9 @@ export function renderLobbyScreen(root) {
     navigate('#home');
     return () => {};
   }
+
+  const gameModule = getGame(session.gameId || 'classifico');
+  const minPlayers = typeof gameModule.minPlayers === 'function' ? gameModule.minPlayers(session.matchMode) : 2;
 
   let activeTab = 'players';
   let players = [];
@@ -60,13 +64,13 @@ export function renderLobbyScreen(root) {
     renderScoreboard(scoreboardEl, players, {});
 
     if (session.isHost) {
-      const enoughPlayers = players.length >= 2;
+      const enoughPlayers = players.length >= minPlayers;
       const p2pReady = session.mode !== 'offline' || transport?.allGuestsReady?.();
       startBtn.disabled = started || !enoughPlayers || !p2pReady;
       startBtn.textContent = started
         ? 'Avvio...'
         : !enoughPlayers
-        ? 'Servono almeno 2 giocatori'
+        ? `Servono almeno ${minPlayers} giocatori`
         : !p2pReady
         ? 'In attesa di connessione P2P...'
         : 'Avvia partita';
@@ -77,12 +81,13 @@ export function renderLobbyScreen(root) {
     h('div', { class: 'lobby-header' }, [
       h('p', { class: 'text-muted' }, 'Codice lobby'),
       h('div', { class: 'lobby-code' }, session.lobbyCode),
-      h('div', { class: 'btn-row', style: { justifyContent: 'center' } }, [
+      h('div', { class: 'btn-row', style: { justifyContent: 'center', flexWrap: 'wrap' } }, [
         h(
           'p',
           { class: `pill ${session.mode === 'offline' ? 'pill-primary' : 'pill-accent'}` },
           session.mode === 'offline' ? '🚌 Partial Offline' : '🌐 Full Online'
         ),
+        h('p', { class: 'pill' }, gameModule.displayName),
         h(
           'p',
           { class: 'pill' },

@@ -165,7 +165,7 @@ export function renderGameScreen(root) {
           })
         );
 
-        const module = getGame('classifico');
+        const module = getGame(session.gameId || 'classifico');
         currentState = module.initRoundState(players, null, { matchMode: session.matchMode || 'standard' });
         transport.broadcastState(currentState);
       }

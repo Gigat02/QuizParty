@@ -1,15 +1,18 @@
 import { initRouter, route } from './core/router.js';
 import { renderHomeScreen } from './screens/homeScreen.js';
 import { renderModeSelectScreen } from './screens/modeSelectScreen.js';
+import { renderGameSelectScreen } from './screens/gameSelectScreen.js';
 import { renderMatchModeSelectScreen } from './screens/matchModeSelectScreen.js';
 import { renderCreateLobbyScreen } from './screens/createLobbyScreen.js';
 import { renderJoinLobbyScreen } from './screens/joinLobbyScreen.js';
 import { renderLobbyScreen } from './screens/lobbyScreen.js';
 import { renderGameScreen } from './screens/gameScreen.js';
 import './games/classifico/index.js'; // auto-registrazione nel registry minigiochi
+import './games/chilhascritto/index.js'; // auto-registrazione nel registry minigiochi
 
 route('#home', renderHomeScreen);
 route('#mode', renderModeSelectScreen);
+route('#gametype', renderGameSelectScreen);
 route('#matchmode', renderMatchModeSelectScreen);
 route('#create', renderCreateLobbyScreen);
 route('#join', renderJoinLobbyScreen);

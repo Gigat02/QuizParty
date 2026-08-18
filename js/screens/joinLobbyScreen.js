@@ -43,7 +43,14 @@ export function renderJoinLobbyScreen(root, params) {
           const existing = await getPlayersOnce(code);
           const color = nextFreeColor(existing.map((p) => p.color));
           const lobby = await joinLobby({ code, playerId, nickname, color });
-          setSession({ lobbyCode: code, playerId, isHost: false, mode: lobby.mode, matchMode: lobby.matchMode });
+          setSession({
+            lobbyCode: code,
+            playerId,
+            isHost: false,
+            mode: lobby.mode,
+            matchMode: lobby.matchMode,
+            gameId: lobby.currentGameId,
+          });
           navigate('#lobby');
         } catch (err) {
           console.error('Errore ingresso lobby', err);

@@ -32,6 +32,7 @@ service cloud.firestore {
         // un permission-denied duro — il client lo interpreta comunque
         // come 'standard' di default (vedi classifico/index.js).
         && (!('matchMode' in request.resource.data) || request.resource.data.matchMode in ['standard', 'custom'])
+        && request.resource.data.currentGameId in ['classifico', 'chilhascritto']
         && request.resource.data.keys().hasOnly(['code', 'mode', 'matchMode', 'hostId', 'status', 'currentGameId', 'createdAt']);
 
       // Solo l'host può aggiornare la lobby, e solo i campi status/currentGameId
