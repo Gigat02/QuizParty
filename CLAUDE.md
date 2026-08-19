@@ -286,6 +286,33 @@ Su richiesta dell'utente la scelta si conferma con un bottone dedicato invece di
 
 Testato con test isolato (banco affermazioni ben formato, punteggi 3/1, bonus autore solo se non lo scopre nessuno, coda completa con azzeramento dei giudizi, rifiuto di indici non validi/autore che giudica sé stesso) e dal vivo a 4 giocatori su 4 porte: giro completo di 4 set, verificato che "Termina partita" non compaia prima dell'ultimo della coda, anteprima ✕/✓ e cambio idea prima della conferma, e Standard a 2 giocatori. Nessuna regressione sugli altri tre giochi.
 
+### Domande più difficili + campi di testo illeggibili sul telefono (19 agosto 2026)
+
+**Difficoltà dei contenuti Standard.** Su richiesta dell'utente, riscritti da capo i banchi delle due modalità in cui è il sistema a proporre qualcosa da indovinare: `chilhascritto/trivia.js` e `bugiaoverita/statements.js`. Il criterio ora è esplicito in testa a entrambi i file e va rispettato aggiungendo nuovi contenuti:
+- **Chi l'ha scritto?**: la risposta vera deve essere *ignota ai più*, altrimenti il gioco si rompe — se tutti sanno la verità nessuno vota i bluff e non c'è partita. Vanno bene capitali "controintuitive" (Ottawa, Wellington, Astana), nomi tecnici di oggetti comuni (l'aglietto dei lacci), primati sorprendenti (il deserto più grande è l'Antartide, la nazione con più fusi orari è la Francia).
+- **Bugia o Verità?**: **tutte e tre** le frasi devono suonare ugualmente incredibili. La ricetta usata: due fatti veri controintuitivi + un luogo comune diffuso ma falso (la Muraglia visibile dalla Luna, il 10% del cervello, i pesci rossi con 3 secondi di memoria). Se una frase è palesemente assurda il set è sbagliato, perché si indovina per esclusione. La posizione della bugia varia fra i set (7/9/4 sulle tre posizioni) per non far imparare lo schema.
+
+Nota di metodo: un'affermazione inizialmente inserita come vera ("il Vaticano ha il più alto tasso di criminalità") è stata sostituita perché si regge su statistiche discutibili. In questo gioco una frase "vera" ambigua è un bug vero e proprio — il punteggio dipende da quale sia *inequivocabilmente* la bugia.
+
+**Bug: testo nero e illeggibile nei campi di input sui telefoni.** Segnalato dall'utente. Causa: né `index.html` né il CSS dichiaravano che l'app è a tema scuro, quindi il browser considerava la pagina "in chiaro" e disegnava i controlli nativi con lo stile di sistema (testo nero sulle nostre superfici scure). In locale non si notava perché il desktop era in tema chiaro/coerente. Fix su tre livelli, tutti necessari per coprire i browser mobili:
+1. `<meta name="color-scheme" content="dark">` in `index.html` e `color-scheme: dark` su `:root` in `tokens.css`;
+2. `-webkit-text-fill-color` e `caret-color` espliciti su `.input` (Safari/iOS in certi casi ignorano `color` sui campi di testo);
+3. override di `:-webkit-autofill` — l'autofill ridipinge campo e testo con una priorità che `background`/`color` non battono: l'unico modo affidabile è coprire lo sfondo con un `box-shadow` interno.
+
+Se in futuro ricompare del testo scuro su sfondo scuro in un controllo nativo, il sospetto numero uno è di nuovo `color-scheme`.
+
+**La propria risposta in "Chi l'ha scritto?"** non è più resa con `opacity: 0.45`: spegnerla la rendeva poco leggibile sul tema scuro (era parte della stessa segnalazione). Ora si distingue con bordo tratteggiato viola, sfondo `--color-primary-soft` ed etichetta "la tua", restando a piena leggibilità e non cliccabile.
+
+Verificato dal vivo che il testo digitato sia `#f4f4fa` su sfondo scuro, che la propria risposta abbia opacità 1 e bordo tratteggiato, e — dato che le affermazioni sono diventate molto più lunghe — che a 375px di larghezza vadano a capo su due righe senza troncamenti né scroll orizzontale.
+
+### Banchi di contenuti ampliati (19 agosto 2026)
+
+Portati a **119 domande** (`chilhascritto/trivia.js`) e **108 set** (`bugiaoverita/statements.js`, cioè 324 affermazioni). L'utente aveva chiesto 1000 per gioco: gli è stato spiegato che a quel volume una parte dei ~4000 fatti sarebbe risultata sbagliata o ambigua senza che io sappia indicare quali — e in "Bugia o Verità?" un'affermazione "vera" ambigua non è un difetto estetico ma un bug, perché il punteggio dipende da quale sia univocamente la bugia. Concordato di scendere a ~100 per gioco, quantità che con una voce consumata per round copre comunque molte serate senza ripetizioni.
+
+**Bug di bilanciamento trovato subito dopo la scrittura dei set**: la bugia finiva in terza posizione in **74 set su 108** (~70%). Scrivendo a mano è l'ordine naturale — prima i due fatti veri, poi il luogo comune falso — ma in partita avrebbe reso "nel dubbio scegli l'ultima" una strategia vincente al doppio del dovuto, esattamente la stessa categoria di problema del "marco tutto vero" risolto in fase di design. Corretto **non** ribilanciando a mano (si sarebbe ripresentato alla prima aggiunta) ma mescolando le tre frasi dentro `pickStatementSet()`, ricalcolando `lieIndex` dopo lo shuffle. Verificato su 30.000 estrazioni: distribuzione 33/33/34% e mai una bugia finita fuori posto. **Conseguenza pratica: chi aggiunge set non deve preoccuparsi di variare la posizione della bugia.**
+
+`statements.js` ora importa `shuffle` da `games/rotation.js` (già in `PRECACHE_URLS`, quindi l'uso offline resta coperto).
+
 ### Prossimi passi
 
 - Test su dispositivi reali (telefoni) prima di considerare la modalità offline affidabile in produzione, specialmente: comportamento drag-and-drop touch, negoziazione WebRTC reale tra due dispositivi separati sulla stessa rete Wi-Fi (i test fatti finora sono su due origini `localhost` sulla stessa macchina — provano che il meccanismo funziona, non che regga su reti reali/NAT diversi). Vale anche per "Chi l'ha scritto?" e "Trova la parola", testati finora solo in Full Online.

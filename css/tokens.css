@@ -15,6 +15,12 @@
 }
 
 :root {
+  /* Dichiara che l'app è a tema scuro: senza questo i controlli nativi
+     (campi di testo, cursore, barre di scorrimento) vengono disegnati dal
+     browser in chiaro, con testo nero illeggibile sulle nostre superfici
+     scure. Va insieme al <meta name="color-scheme"> in index.html. */
+  color-scheme: dark;
+
   /* superfici: tema scuro, viola molto scuro (stessa palette di
      github.com/Gigat02/Offline-game) */
   --color-bg: #0c0b1c;

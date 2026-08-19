@@ -113,13 +113,34 @@
   font-size: 1.1rem;
   background: var(--color-surface-alt);
   color: var(--color-text);
+  /* Safari/iOS ignorano `color` in alcuni casi sui campi di testo e usano
+     il proprio colore di sistema (nero): text-fill-color ha la precedenza. */
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-accent);
   outline: none;
   transition: border-color 0.15s ease;
   width: 100%;
 }
 
+.input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1; /* Firefox schiarisce i placeholder di suo */
+}
+
 .input:focus {
   border-color: var(--color-primary);
+}
+
+/* L'autofill del browser ridipinge campo e testo (bianco/nero) con una
+   priorità che `background` e `color` non riescono a battere: l'unico modo
+   affidabile è coprire lo sfondo con un box-shadow interno e forzare il
+   colore del testo. */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-alt) inset;
+  caret-color: var(--color-accent);
 }
 
 .input-error {
@@ -308,10 +329,15 @@
   text-align: left;
 }
 
-/* La propria risposta: visibile ma spenta e non votabile. */
+/* La propria risposta: si riconosce a colpo d'occhio ma non si può votare.
+   Niente opacità — spegnerla la rendeva difficile da leggere sullo sfondo
+   scuro: si distingue col bordo tratteggiato e l'etichetta "la tua". */
 .answer-option-mine {
-  opacity: 0.45;
   cursor: not-allowed;
+  border-style: dashed;
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-text);
 }
 
 .answer-option-tag {
@@ -321,8 +347,8 @@
   font-weight: 600;
   padding: 2px 10px;
   border-radius: var(--radius-pill);
-  background: var(--color-surface-alt);
-  color: var(--color-text-muted);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
 }
 
 /* ---------- Trova la parola ---------- */
